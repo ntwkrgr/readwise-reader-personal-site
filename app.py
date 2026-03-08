@@ -22,7 +22,7 @@ VALID_LOCATIONS = {"later", "new", "archive", "feed"}
 
 # --- Cache ---
 
-_list_cache: dict[tuple[str, str | None], dict[str, Any]] = {}
+_list_cache: dict[tuple[str, str | None, str | None], dict[str, Any]] = {}
 _article_cache: dict[str, dict[str, Any]] = {}
 
 
@@ -66,9 +66,11 @@ def _handle_api_response(resp: http_requests.Response) -> dict[str, Any]:
 
 
 def fetch_article_list(
-    location: str = "later", page_cursor: str | None = None
+    location: str = "later",
+    page_cursor: str | None = None,
+    tag: str | None = None,
 ) -> dict[str, Any]:
-    cache_key = (location, page_cursor)
+    cache_key = (location, page_cursor, tag)
     if cache_key in _list_cache:
         return _list_cache[cache_key]
 
@@ -79,6 +81,8 @@ def fetch_article_list(
     }
     if page_cursor:
         params["pageCursor"] = page_cursor
+    if tag:
+        params["tag"] = tag
 
     try:
         resp = http_requests.get(
@@ -165,12 +169,13 @@ def article_list():
         location = "later"
     page_cursor = request.args.get("cursor")
     refresh = request.args.get("refresh")
+    tag = request.args.get("tag")
 
     if refresh:
         invalidate_list_cache()
 
     try:
-        data = fetch_article_list(location=location, page_cursor=page_cursor)
+        data = fetch_article_list(location=location, page_cursor=page_cursor, tag=tag)
     except ReadwiseAPIError as e:
         return render_template("error.html", message=str(e), retry_url=request.url)
 
@@ -179,6 +184,7 @@ def article_list():
         articles=data["results"],
         next_cursor=data["nextPageCursor"],
         current_location=location,
+        current_tag=tag,
         count=data["count"],
     )
 

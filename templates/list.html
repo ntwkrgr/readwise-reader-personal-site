@@ -1,14 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Articles — {{ current_location | capitalize }}{% endblock %}
+{% block title %}Articles — {{ current_location | capitalize }}{% if current_tag %} [{{ current_tag }}]{% endif %}{% endblock %}
 
 {% block content %}
 <nav class="nav">
-    <a href="/?location=later" class="{{ 'active' if current_location == 'later' else '' }}">Later</a>
-    <a href="/?location=new" class="{{ 'active' if current_location == 'new' else '' }}">New</a>
-    <a href="/?location=archive" class="{{ 'active' if current_location == 'archive' else '' }}">Archive</a>
-    <a href="/?location={{ current_location }}&refresh=1" style="margin-left: auto;">Refresh</a>
+    <a href="/?location=later{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'later' else '' }}">Later</a>
+    <a href="/?location=new{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'new' else '' }}">New</a>
+    <a href="/?location=archive{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'archive' else '' }}">Archive</a>
+    <a href="/?location={{ current_location }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&refresh=1" style="margin-left: auto;">Refresh</a>
 </nav>
+
+{% if current_tag %}
+<div class="tag-filter">
+    Filtered by tag: <strong>{{ current_tag }}</strong>
+    <a href="/?location={{ current_location }}" class="btn" style="margin-left: 8px; padding: 6px 16px; min-height: 36px; font-size: 14px;">Clear</a>
+</div>
+{% endif %}
 
 {% if articles %}
 {% for article in articles %}
@@ -19,6 +26,13 @@
         {% if article.word_count %}{{ article.word_count }} words · {% endif %}
         {{ article.reading_time or "unknown" }}
     </div>
+    {% if article.tags %}
+    <div class="article-tags">
+        {% for tag_name in article.tags %}
+        <a href="/?location={{ current_location }}&tag={{ tag_name }}">{{ tag_name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
     {% if article.reading_progress and article.reading_progress > 0 %}
     <div class="progress-bar">
         <div class="progress-fill" style="width: {{ (article.reading_progress * 100) | int }}%"></div>
@@ -29,10 +43,10 @@
 
 <div class="pagination">
     {% if next_cursor %}
-    <a href="/?location={{ current_location }}&cursor={{ next_cursor }}" class="btn">Next page</a>
+    <a href="/?location={{ current_location }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&cursor={{ next_cursor }}" class="btn">Next page</a>
     {% endif %}
 </div>
 {% else %}
-<div class="empty">No articles in {{ current_location }}.</div>
+<div class="empty">No articles{% if current_tag %} tagged "{{ current_tag }}"{% endif %} in {{ current_location }}.</div>
 {% endif %}
 {% endblock %}
