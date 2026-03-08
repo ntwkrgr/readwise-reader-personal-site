@@ -1,6 +1,7 @@
 import os
 import random
 import uuid
+from urllib.parse import urlparse
 
 from typing import Any
 
@@ -67,8 +68,24 @@ def _handle_api_response(resp: http_requests.Response) -> dict[str, Any]:
     return resp.json()
 
 
+VIDEO_DOMAINS = {"youtube.com", "youtu.be", "vimeo.com"}
+
+
+def _is_video_url(url: str | None) -> bool:
+    if not url or not url.strip():
+        return False
+    try:
+        parsed = urlparse(url)
+        netloc = (parsed.netloc or "").lower()
+        if netloc.startswith("www."):
+            netloc = netloc[4:]
+        return netloc in VIDEO_DOMAINS
+    except Exception:
+        return False
+
+
 def fetch_article_list(
-    location: str = "later",
+    location: str = "new",
     page_cursor: str | None = None,
     tag: str | None = None,
 ) -> dict[str, Any]:
@@ -99,6 +116,12 @@ def fetch_article_list(
     data = _handle_api_response(resp)
 
     results = [r for r in data.get("results", []) if r.get("parent_id") is None]
+    results = [
+        r
+        for r in results
+        if r.get("category") != "video"
+        and not _is_video_url(r.get("source_url") or r.get("url"))
+    ]
     result = {
         "results": results,
         "nextPageCursor": data.get("nextPageCursor"),
@@ -215,9 +238,9 @@ def inject_display_prefs():
 
 @app.route("/")
 def article_list():
-    location = request.args.get("location", "later")
+    location = request.args.get("location", "new")
     if location not in VALID_LOCATIONS:
-        location = "later"
+        location = "new"
     sort = request.args.get("sort", "newest")
     if sort not in VALID_SORTS:
         sort = "newest"
@@ -353,10 +376,11 @@ def do_archive(doc_id: str):
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
     if request.method == "POST":
-        size = request.form.get("text_size", "medium")
-        weight = request.form.get("text_weight", "normal")
-        theme = request.form.get("theme", "light")
-        highlighting = request.form.get("highlighting", "off")
+        # Merge form with current cookies so a single option submit keeps others
+        size = request.form.get("text_size") or request.cookies.get(TEXT_SIZE_COOKIE, "medium")
+        weight = request.form.get("text_weight") or request.cookies.get(TEXT_WEIGHT_COOKIE, "normal")
+        theme = request.form.get("theme") or request.cookies.get(THEME_COOKIE, "light")
+        highlighting = request.form.get("highlighting") or request.cookies.get(HIGHLIGHTING_COOKIE, "off")
         if size not in VALID_TEXT_SIZES:
             size = "medium"
         if weight not in VALID_TEXT_WEIGHTS:
@@ -376,9 +400,9 @@ def settings():
 
 @app.route("/tags")
 def tag_picker():
-    location = request.args.get("location", "later")
+    location = request.args.get("location", "new")
     if location not in VALID_LOCATIONS:
-        location = "later"
+        location = "new"
     try:
         data = fetch_article_list(location=location, page_cursor=None, tag=None)
     except ReadwiseAPIError as e:

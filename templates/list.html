@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Articles — {{ current_location | capitalize }}{% if current_tag %} [{{ current_tag }}]{% endif %}{% endblock %}
+{% block title %}Articles — {% if current_location == 'new' %}Inbox{% else %}{{ current_location | capitalize }}{% endif %}{% if current_tag %} [{{ current_tag }}]{% endif %}{% endblock %}
 
 {% block content %}
 <nav class="nav">
     <div class="nav-group">
+        <a href="/?location=new&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'new' else '' }}">Inbox</a>
         <a href="/?location=later&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'later' else '' }}">Later</a>
-        <a href="/?location=new&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'new' else '' }}">New</a>
         <a href="/?location=archive&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'archive' else '' }}">Archive</a>
         <a href="/tags?location={{ current_location }}">Tags</a>
         <a href="/?location={{ current_location }}&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&refresh=1">Refresh</a>

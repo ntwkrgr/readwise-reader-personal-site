@@ -9,61 +9,33 @@
     <div style="margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Theme</p>
         <div class="option-group">
-            <label class="settings-option {{ 'option-active' if theme == 'light' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
-                <input type="radio" name="theme" value="light" {{ 'checked' if theme == 'light' else '' }}>
-                <span style="margin-left: 8px;">Light</span>
-            </label>
-            <label class="settings-option {{ 'option-active' if theme == 'dark' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
-                <input type="radio" name="theme" value="dark" {{ 'checked' if theme == 'dark' else '' }}>
-                <span style="margin-left: 8px;">Dark</span>
-            </label>
+            <button type="submit" name="theme" value="light" class="settings-option {{ 'option-active' if theme == 'light' else '' }}">Light</button>
+            <button type="submit" name="theme" value="dark" class="settings-option {{ 'option-active' if theme == 'dark' else '' }}">Dark</button>
         </div>
     </div>
     <div style="margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Size</p>
         <div class="option-group">
-            <label class="settings-option {{ 'option-active' if text_size == 'small' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
-                <input type="radio" name="text_size" value="small" {{ 'checked' if text_size == 'small' else '' }}>
-                <span style="margin-left: 8px;">Small</span>
-            </label>
-            <label class="settings-option {{ 'option-active' if text_size == 'medium' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
-                <input type="radio" name="text_size" value="medium" {{ 'checked' if text_size == 'medium' else '' }}>
-                <span style="margin-left: 8px;">Medium</span>
-            </label>
-            <label class="settings-option {{ 'option-active' if text_size == 'large' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
-                <input type="radio" name="text_size" value="large" {{ 'checked' if text_size == 'large' else '' }}>
-                <span style="margin-left: 8px;">Large</span>
-            </label>
+            <button type="submit" name="text_size" value="small" class="settings-option {{ 'option-active' if text_size == 'small' else '' }}">Small</button>
+            <button type="submit" name="text_size" value="medium" class="settings-option {{ 'option-active' if text_size == 'medium' else '' }}">Medium</button>
+            <button type="submit" name="text_size" value="large" class="settings-option {{ 'option-active' if text_size == 'large' else '' }}">Large</button>
         </div>
     </div>
     <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Weight</p>
         <div class="option-group">
-            <label class="settings-option {{ 'option-active' if text_weight == 'normal' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
-                <input type="radio" name="text_weight" value="normal" {{ 'checked' if text_weight == 'normal' else '' }}>
-                <span style="margin-left: 8px;">Normal</span>
-            </label>
-            <label class="settings-option {{ 'option-active' if text_weight == 'bold' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
-                <input type="radio" name="text_weight" value="bold" {{ 'checked' if text_weight == 'bold' else '' }}>
-                <span style="margin-left: 8px;">Bold</span>
-            </label>
+            <button type="submit" name="text_weight" value="normal" class="settings-option {{ 'option-active' if text_weight == 'normal' else '' }}">Normal</button>
+            <button type="submit" name="text_weight" value="bold" class="settings-option {{ 'option-active' if text_weight == 'bold' else '' }}">Bold</button>
         </div>
     </div>
     <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Highlighting</p>
         <p class="settings-desc" style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, article pages use a small script so you can select text and save highlights to Readwise. Off keeps the site minimal (no JavaScript). JavaScript must be enabled in the browser: open the three dots menu → Browser settings → Enable JavaScript. (If you see “Disable JavaScript” instead, it’s already enabled.)</p>
         <div class="option-group">
-            <label class="settings-option {{ 'option-active' if not highlighting_enabled else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
-                <input type="radio" name="highlighting" value="off" {{ 'checked' if not highlighting_enabled else '' }}>
-                <span style="margin-left: 8px;">Off</span>
-            </label>
-            <label class="settings-option {{ 'option-active' if highlighting_enabled else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
-                <input type="radio" name="highlighting" value="on" {{ 'checked' if highlighting_enabled else '' }}>
-                <span style="margin-left: 8px;">On</span>
-            </label>
+            <button type="submit" name="highlighting" value="off" class="settings-option {{ 'option-active' if not highlighting_enabled else '' }}">Off</button>
+            <button type="submit" name="highlighting" value="on" class="settings-option {{ 'option-active' if highlighting_enabled else '' }}">On</button>
         </div>
     </div>
-    <button type="submit" class="btn btn-dark">Save</button>
 </form>
 
 <p style="margin-top: 20px;">
