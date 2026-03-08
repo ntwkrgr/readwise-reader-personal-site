@@ -51,7 +51,7 @@
     </div>
     <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Highlighting</p>
-        <p class="settings-desc" style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, article pages use a small script so you can select text and save highlights to Readwise. Off keeps the site minimal (no JavaScript).</p>
+        <p class="settings-desc" style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, article pages use a small script so you can select text and save highlights to Readwise. Off keeps the site minimal (no JavaScript). JavaScript must be enabled in the browser: open the three dots menu → Browser settings → Enable JavaScript. (If you see “Disable JavaScript” instead, it’s already enabled.)</p>
         <div class="option-group">
             <label class="settings-option {{ 'option-active' if not highlighting_enabled else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="highlighting" value="off" {{ 'checked' if not highlighting_enabled else '' }}>
