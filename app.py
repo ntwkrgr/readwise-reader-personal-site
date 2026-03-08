@@ -274,6 +274,30 @@ def save_highlight_to_readwise(article: dict[str, Any], text: str, note: str = "
         raise ReadwiseAPIError(f"Readwise returned an error (HTTP {resp.status_code}).")
 
 
+@app.route("/read/<doc_id>/note", methods=["GET", "POST"])
+def add_note(doc_id: str):
+    if request.method == "POST":
+        text = (request.form.get("text") or "").strip()
+        if not text:
+            flash("Enter some text for the note.")
+            return redirect(url_for("add_note", doc_id=doc_id))
+        try:
+            article = fetch_article(doc_id)
+        except ReadwiseAPIError as e:
+            return render_template("error.html", message=str(e), retry_url=url_for("read_article", doc_id=doc_id))
+        try:
+            save_highlight_to_readwise(article, text)
+        except ReadwiseAPIError as e:
+            return render_template("error.html", message=str(e), retry_url=url_for("add_note", doc_id=doc_id))
+        flash("Note saved to Readwise.")
+        return redirect(url_for("read_article", doc_id=doc_id))
+    try:
+        article = fetch_article(doc_id)
+    except ReadwiseAPIError as e:
+        return render_template("error.html", message=str(e), retry_url=url_for("article_list"))
+    return render_template("note.html", article=article)
+
+
 @app.route("/save-highlight", methods=["POST"])
 def save_highlight():
     if not request.is_json:

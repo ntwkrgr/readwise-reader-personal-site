@@ -8,12 +8,12 @@
 <form method="post" action="/settings">
     <div style="margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Theme</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+        <div class="option-group">
+            <label class="settings-option {{ 'option-active' if theme == 'light' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="theme" value="light" {{ 'checked' if theme == 'light' else '' }}>
                 <span style="margin-left: 8px;">Light</span>
             </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+            <label class="settings-option {{ 'option-active' if theme == 'dark' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="theme" value="dark" {{ 'checked' if theme == 'dark' else '' }}>
                 <span style="margin-left: 8px;">Dark</span>
             </label>
@@ -21,16 +21,16 @@
     </div>
     <div style="margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Size</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+        <div class="option-group">
+            <label class="settings-option {{ 'option-active' if text_size == 'small' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="text_size" value="small" {{ 'checked' if text_size == 'small' else '' }}>
                 <span style="margin-left: 8px;">Small</span>
             </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+            <label class="settings-option {{ 'option-active' if text_size == 'medium' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="text_size" value="medium" {{ 'checked' if text_size == 'medium' else '' }}>
                 <span style="margin-left: 8px;">Medium</span>
             </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+            <label class="settings-option {{ 'option-active' if text_size == 'large' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="text_size" value="large" {{ 'checked' if text_size == 'large' else '' }}>
                 <span style="margin-left: 8px;">Large</span>
             </label>
@@ -38,12 +38,12 @@
     </div>
     <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Weight</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+        <div class="option-group">
+            <label class="settings-option {{ 'option-active' if text_weight == 'normal' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="text_weight" value="normal" {{ 'checked' if text_weight == 'normal' else '' }}>
                 <span style="margin-left: 8px;">Normal</span>
             </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+            <label class="settings-option {{ 'option-active' if text_weight == 'bold' else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="text_weight" value="bold" {{ 'checked' if text_weight == 'bold' else '' }}>
                 <span style="margin-left: 8px;">Bold</span>
             </label>
@@ -51,13 +51,13 @@
     </div>
     <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Highlighting</p>
-        <p style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, article pages use a small script so you can select text and save highlights to Readwise. Off keeps the site minimal (no JavaScript).</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+        <p class="settings-desc" style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, article pages use a small script so you can select text and save highlights to Readwise. Off keeps the site minimal (no JavaScript).</p>
+        <div class="option-group">
+            <label class="settings-option {{ 'option-active' if not highlighting_enabled else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="highlighting" value="off" {{ 'checked' if not highlighting_enabled else '' }}>
                 <span style="margin-left: 8px;">Off</span>
             </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+            <label class="settings-option {{ 'option-active' if highlighting_enabled else '' }}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; cursor: pointer;">
                 <input type="radio" name="highlighting" value="on" {{ 'checked' if highlighting_enabled else '' }}>
                 <span style="margin-left: 8px;">On</span>
             </label>
