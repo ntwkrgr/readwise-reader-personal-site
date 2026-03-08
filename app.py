@@ -27,10 +27,12 @@ VALID_SORTS = {"newest", "oldest", "random"}
 
 _list_cache: dict[tuple[str, str | None, str | None], dict[str, Any]] = {}
 _article_cache: dict[str, dict[str, Any]] = {}
+_tag_cache: dict[str, list[str]] = {}
 
 
 def invalidate_list_cache() -> None:
     _list_cache.clear()
+    _tag_cache.clear()
 
 
 def invalidate_article_cache(doc_id: str) -> None:
@@ -144,6 +146,33 @@ def _sort_articles(articles: list[dict[str, Any]], sort: str) -> list[dict[str, 
     return out
 
 
+def _extract_tags(results: list[dict[str, Any]]) -> set[str]:
+    tags: set[str] = set()
+    for a in results:
+        tags_data = a.get("tags") or {}
+        if isinstance(tags_data, dict):
+            tags.update(tags_data.keys())
+        elif isinstance(tags_data, list):
+            tags.update(tags_data)
+    return tags
+
+
+def fetch_all_tags(location: str) -> list[str]:
+    if location in _tag_cache:
+        return _tag_cache[location]
+    tag_names: set[str] = set()
+    cursor: str | None = None
+    while True:
+        data = fetch_article_list(location=location, page_cursor=cursor, tag=None)
+        tag_names.update(_extract_tags(data["results"]))
+        cursor = data.get("nextPageCursor")
+        if not cursor:
+            break
+    result = sorted(tag_names)
+    _tag_cache[location] = result
+    return result
+
+
 def fetch_article(doc_id: str) -> dict[str, Any]:
     if doc_id in _article_cache:
         return _article_cache[doc_id]
@@ -204,6 +233,7 @@ TEXT_WEIGHT_COOKIE = "readwise_text_weight"
 THEME_COOKIE = "readwise_theme"
 HIGHLIGHTING_COOKIE = "readwise_highlighting"
 TAP_ADVANCE_COOKIE = "readwise_tap_advance"
+SORT_COOKIE = "readwise_sort"
 VALID_TEXT_SIZES = {"small", "medium", "large"}
 VALID_TEXT_WEIGHTS = {"normal", "bold"}
 VALID_THEMES = {"light", "dark"}
@@ -220,6 +250,7 @@ def inject_display_prefs():
     theme = request.cookies.get(THEME_COOKIE, "light")
     highlighting = request.cookies.get(HIGHLIGHTING_COOKIE, "off")
     tap_advance = request.cookies.get(TAP_ADVANCE_COOKIE, "off")
+    default_sort = request.cookies.get(SORT_COOKIE, "newest")
     if size not in VALID_TEXT_SIZES:
         size = "medium"
     if weight not in VALID_TEXT_WEIGHTS:
@@ -230,12 +261,15 @@ def inject_display_prefs():
         highlighting = "off"
     if tap_advance not in VALID_TAP_ADVANCE:
         tap_advance = "off"
+    if default_sort not in VALID_SORTS:
+        default_sort = "newest"
     return {
         "text_size": size,
         "text_weight": weight,
         "theme": theme,
         "highlighting_enabled": highlighting == "on",
         "tap_advance": tap_advance,
+        "default_sort": default_sort,
     }
 
 
@@ -247,9 +281,12 @@ def article_list():
     location = request.args.get("location", "new")
     if location not in VALID_LOCATIONS:
         location = "new"
-    sort = request.args.get("sort", "newest")
+    default_sort = request.cookies.get(SORT_COOKIE, "newest")
+    if default_sort not in VALID_SORTS:
+        default_sort = "newest"
+    sort = request.args.get("sort", default_sort)
     if sort not in VALID_SORTS:
-        sort = "newest"
+        sort = default_sort
     page_cursor = request.args.get("cursor")
     refresh = request.args.get("refresh")
     tag = request.args.get("tag")
@@ -264,6 +301,11 @@ def article_list():
 
     articles = _sort_articles(data["results"], sort)
 
+    try:
+        available_tags = fetch_all_tags(location)
+    except ReadwiseAPIError:
+        available_tags = sorted(_extract_tags(data["results"]))
+
     return render_template(
         "list.html",
         articles=articles,
@@ -272,6 +314,7 @@ def article_list():
         current_tag=tag,
         current_sort=sort,
         count=data["count"],
+        available_tags=available_tags,
     )
 
 
@@ -388,6 +431,7 @@ def settings():
         theme = request.form.get("theme") or request.cookies.get(THEME_COOKIE, "light")
         highlighting = request.form.get("highlighting") or request.cookies.get(HIGHLIGHTING_COOKIE, "off")
         tap_advance = request.form.get("tap_advance") or request.cookies.get(TAP_ADVANCE_COOKIE, "off")
+        default_sort = request.form.get("default_sort") or request.cookies.get(SORT_COOKIE, "newest")
         if size not in VALID_TEXT_SIZES:
             size = "medium"
         if weight not in VALID_TEXT_WEIGHTS:
@@ -398,12 +442,15 @@ def settings():
             highlighting = "off"
         if tap_advance not in VALID_TAP_ADVANCE:
             tap_advance = "off"
+        if default_sort not in VALID_SORTS:
+            default_sort = "newest"
         resp = make_response(redirect(request.referrer or url_for("article_list")))
         resp.set_cookie(TEXT_SIZE_COOKIE, size, max_age=31536000)
         resp.set_cookie(TEXT_WEIGHT_COOKIE, weight, max_age=31536000)
         resp.set_cookie(THEME_COOKIE, theme, max_age=31536000)
         resp.set_cookie(HIGHLIGHTING_COOKIE, highlighting, max_age=31536000)
         resp.set_cookie(TAP_ADVANCE_COOKIE, tap_advance, max_age=31536000)
+        resp.set_cookie(SORT_COOKIE, default_sort, max_age=31536000)
         return resp
     return render_template("settings.html")
 
@@ -414,19 +461,12 @@ def tag_picker():
     if location not in VALID_LOCATIONS:
         location = "new"
     try:
-        data = fetch_article_list(location=location, page_cursor=None, tag=None)
+        all_tags = fetch_all_tags(location)
     except ReadwiseAPIError as e:
         return render_template("error.html", message=str(e), retry_url=request.url)
-    tag_names: set[str] = set()
-    for article in data["results"]:
-        tags = article.get("tags") or {}
-        if isinstance(tags, dict):
-            tag_names.update(tags.keys())
-        elif isinstance(tags, list):
-            tag_names.update(tags)
     return render_template(
         "tags.html",
-        tags=sorted(tag_names),
+        tags=all_tags,
         current_location=location,
     )
 

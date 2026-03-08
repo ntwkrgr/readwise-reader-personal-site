@@ -29,6 +29,14 @@
         </div>
     </div>
     <div style="margin-bottom: 24px;">
+        <p style="font-weight: bold; margin-bottom: 8px;">Default sort</p>
+        <div class="option-group">
+            <button type="submit" name="default_sort" value="newest" class="settings-option {{ 'option-active' if default_sort == 'newest' else '' }}">Newest</button>
+            <button type="submit" name="default_sort" value="oldest" class="settings-option {{ 'option-active' if default_sort == 'oldest' else '' }}">Oldest</button>
+            <button type="submit" name="default_sort" value="random" class="settings-option {{ 'option-active' if default_sort == 'random' else '' }}">Random</button>
+        </div>
+    </div>
+    <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Highlighting</p>
         <p class="settings-desc" style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, article pages use a small script so you can select text and save highlights to Readwise. Off keeps the site minimal (no JavaScript). JavaScript must be enabled in the browser: open the three dots menu → Browser settings → Enable JavaScript. (If you see “Disable JavaScript” instead, it’s already enabled.)</p>
         <div class="option-group">
