@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<div style="padding: 32px 0; text-align: center;">
+    <h1 style="font-size: 22px; margin-bottom: 16px;">Something went wrong</h1>
+    <p style="margin-bottom: 24px;">{{ message }}</p>
+    {% if retry_url %}
+    <a href="{{ retry_url }}" class="btn">Tap to retry</a>
+    {% endif %}
+    <div style="margin-top: 16px;">
+        <a href="/" class="btn">Back to list</a>
+    </div>
+</div>
+{% endblock %}
