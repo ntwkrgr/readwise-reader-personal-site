@@ -33,11 +33,37 @@
         }
         .nav {
             display: flex;
-            gap: 4px;
+            align-items: stretch;
+            gap: 8px;
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
-        .nav a {
+        .nav-group {
+            display: flex;
+            border: 2px solid #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .nav-group a {
+            display: block;
+            padding: 12px 20px;
+            min-height: 48px;
+            text-decoration: none;
+            border: none;
+            border-right: 2px solid #000;
+            border-radius: 0;
+            font-size: 16px;
+            line-height: 24px;
+            text-align: center;
+        }
+        .nav-group a:last-child {
+            border-right: none;
+        }
+        .nav-group a.active {
+            background: #000;
+            color: #fff;
+        }
+        .nav-settings {
             display: block;
             padding: 12px 20px;
             min-height: 48px;
@@ -47,10 +73,7 @@
             font-size: 16px;
             line-height: 24px;
             text-align: center;
-        }
-        .nav a.active {
-            background: #000;
-            color: #fff;
+            margin-left: auto;
         }
         .btn {
             display: inline-block;
@@ -188,15 +211,37 @@
         body.theme-dark {
             background: #000;
             color: #fff;
+            scrollbar-color: #444 #222;
+        }
+        body.theme-dark::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        body.theme-dark::-webkit-scrollbar-track {
+            background: #222;
+        }
+        body.theme-dark::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 6px;
+        }
+        body.theme-dark::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
         body.theme-dark a { color: #fff; }
-        body.theme-dark .nav a {
+        body.theme-dark .nav-group {
             border-color: #fff;
+        }
+        body.theme-dark .nav-group a {
+            border-right-color: #fff;
             color: #fff;
         }
-        body.theme-dark .nav a.active {
+        body.theme-dark .nav-group a.active {
             background: #fff;
             color: #000;
+        }
+        body.theme-dark .nav-settings {
+            border-color: #fff;
+            color: #fff;
         }
         body.theme-dark .btn {
             border-color: #fff;
