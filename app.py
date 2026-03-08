@@ -5,7 +5,7 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from flask import Flask, flash, make_response, redirect, render_template, request, url_for
+from flask import Flask, flash, jsonify, make_response, redirect, render_template, request, url_for
 
 import requests as http_requests
 
@@ -163,19 +163,36 @@ def sanitize_html(html_content: str) -> str:
 
 TEXT_SIZE_COOKIE = "readwise_text_size"
 TEXT_WEIGHT_COOKIE = "readwise_text_weight"
+THEME_COOKIE = "readwise_theme"
+HIGHLIGHTING_COOKIE = "readwise_highlighting"
 VALID_TEXT_SIZES = {"small", "medium", "large"}
 VALID_TEXT_WEIGHTS = {"normal", "bold"}
+VALID_THEMES = {"light", "dark"}
+VALID_HIGHLIGHTING = {"on", "off"}
+
+READWISE_V2_HIGHLIGHTS = "https://readwise.io/api/v2/highlights/"
 
 
 @app.context_processor
 def inject_display_prefs():
     size = request.cookies.get(TEXT_SIZE_COOKIE, "medium")
     weight = request.cookies.get(TEXT_WEIGHT_COOKIE, "normal")
+    theme = request.cookies.get(THEME_COOKIE, "light")
+    highlighting = request.cookies.get(HIGHLIGHTING_COOKIE, "off")
     if size not in VALID_TEXT_SIZES:
         size = "medium"
     if weight not in VALID_TEXT_WEIGHTS:
         weight = "normal"
-    return {"text_size": size, "text_weight": weight}
+    if theme not in VALID_THEMES:
+        theme = "light"
+    if highlighting not in VALID_HIGHLIGHTING:
+        highlighting = "off"
+    return {
+        "text_size": size,
+        "text_weight": weight,
+        "theme": theme,
+        "highlighting_enabled": highlighting == "on",
+    }
 
 
 # --- Routes ---
@@ -228,6 +245,55 @@ def read_article(doc_id: str):
     )
 
 
+def save_highlight_to_readwise(article: dict[str, Any], text: str, note: str = "") -> None:
+    payload = {
+        "highlights": [
+            {
+                "text": text[:8191],
+                "title": (article.get("title") or "")[:511],
+                "author": (article.get("author") or "")[:1024],
+                "source_url": (article.get("source_url") or article.get("url") or "")[:2047],
+                "category": "articles",
+            }
+        ]
+    }
+    if note:
+        payload["highlights"][0]["note"] = note[:8191]
+    try:
+        resp = http_requests.post(
+            READWISE_V2_HIGHLIGHTS,
+            headers=_api_headers(),
+            json=payload,
+            timeout=15,
+        )
+    except http_requests.RequestException:
+        raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
+    if resp.status_code == 401:
+        raise ReadwiseAPIError("Invalid API token — check your .env file.")
+    if resp.status_code >= 400:
+        raise ReadwiseAPIError(f"Readwise returned an error (HTTP {resp.status_code}).")
+
+
+@app.route("/save-highlight", methods=["POST"])
+def save_highlight():
+    if not request.is_json:
+        return jsonify({"error": "JSON required"}), 400
+    data = request.get_json() or {}
+    doc_id = data.get("doc_id")
+    text = (data.get("text") or "").strip()
+    if not doc_id or not text:
+        return jsonify({"error": "doc_id and text required"}), 400
+    try:
+        article = fetch_article(doc_id)
+    except ReadwiseAPIError as e:
+        return jsonify({"error": str(e)}), 502
+    try:
+        save_highlight_to_readwise(article, text, note=data.get("note", ""))
+    except ReadwiseAPIError as e:
+        return jsonify({"error": str(e)}), 502
+    return jsonify({"ok": True})
+
+
 @app.route("/archive/<doc_id>", methods=["POST"])
 def do_archive(doc_id: str):
     try:
@@ -244,13 +310,21 @@ def settings():
     if request.method == "POST":
         size = request.form.get("text_size", "medium")
         weight = request.form.get("text_weight", "normal")
+        theme = request.form.get("theme", "light")
+        highlighting = request.form.get("highlighting", "off")
         if size not in VALID_TEXT_SIZES:
             size = "medium"
         if weight not in VALID_TEXT_WEIGHTS:
             weight = "normal"
+        if theme not in VALID_THEMES:
+            theme = "light"
+        if highlighting not in VALID_HIGHLIGHTING:
+            highlighting = "off"
         resp = make_response(redirect(request.referrer or url_for("article_list")))
         resp.set_cookie(TEXT_SIZE_COOKIE, size, max_age=31536000)
         resp.set_cookie(TEXT_WEIGHT_COOKIE, weight, max_age=31536000)
+        resp.set_cookie(THEME_COOKIE, theme, max_age=31536000)
+        resp.set_cookie(HIGHLIGHTING_COOKIE, highlighting, max_age=31536000)
         return resp
     return render_template("settings.html")
 

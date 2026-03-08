@@ -22,10 +22,10 @@
         }
         body.text-size-small { font-size: 16px; }
         body.text-size-small article { font-size: 16px; }
-        body.text-size-medium { font-size: 18px; }
-        body.text-size-medium article { font-size: 18px; }
-        body.text-size-large { font-size: 22px; }
-        body.text-size-large article { font-size: 22px; }
+        body.text-size-medium { font-size: 22px; }
+        body.text-size-medium article { font-size: 22px; }
+        body.text-size-large { font-size: 26px; }
+        body.text-size-large article { font-size: 26px; }
         body.text-weight-bold article { font-weight: bold; }
         a {
             color: #000;
@@ -43,6 +43,7 @@
             min-height: 48px;
             text-decoration: none;
             border: 2px solid #000;
+            border-radius: 8px;
             font-size: 16px;
             line-height: 24px;
             text-align: center;
@@ -56,6 +57,7 @@
             padding: 12px 24px;
             min-height: 48px;
             border: 2px solid #000;
+            border-radius: 8px;
             background: #fff;
             color: #000;
             font-family: Georgia, "Times New Roman", serif;
@@ -80,6 +82,7 @@
         .flash {
             padding: 12px;
             border: 2px solid #000;
+            border-radius: 8px;
             margin-bottom: 16px;
             font-size: 16px;
         }
@@ -166,18 +169,6 @@
             flex-wrap: wrap;
             gap: 4px;
         }
-        .article-tags {
-            margin-top: 6px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .article-tags a {
-            font-size: 13px;
-            padding: 4px 10px;
-            border: 1px solid #000;
-            text-decoration: none;
-        }
         .empty {
             padding: 32px 0;
             text-align: center;
@@ -194,9 +185,49 @@
             min-height: 48px;
             border: 2px solid #000;
         }
+        body.theme-dark {
+            background: #000;
+            color: #fff;
+        }
+        body.theme-dark a { color: #fff; }
+        body.theme-dark .nav a {
+            border-color: #fff;
+            color: #fff;
+        }
+        body.theme-dark .nav a.active {
+            background: #fff;
+            color: #000;
+        }
+        body.theme-dark .btn {
+            border-color: #fff;
+            color: #fff;
+            background: #000;
+        }
+        body.theme-dark .btn-dark {
+            background: #fff;
+            color: #000;
+        }
+        body.theme-dark .flash { border-color: #fff; }
+        body.theme-dark .article-item { border-bottom-color: #fff; }
+        body.theme-dark .article-meta { color: #ccc; }
+        body.theme-dark .progress-bar { background: #444; }
+        body.theme-dark .progress-fill { background: #fff; }
+        body.theme-dark .tag-filter { border-bottom-color: #fff; }
+        body.theme-dark .empty { color: #fff; }
+        body.theme-dark .no-content a { border-color: #fff; color: #fff; }
+        body.theme-dark article blockquote { border-left-color: #fff; }
+        body.theme-dark article pre,
+        body.theme-dark article th,
+        body.theme-dark article td { border-color: #fff; }
+        body.theme-dark .settings-option {
+            border-color: #fff !important;
+            color: #fff;
+        }
+        body.theme-dark .settings-option span { color: #fff; }
+        .settings-option { border-radius: 8px; }
     </style>
 </head>
-<body class="text-size-{{ text_size }} text-weight-{{ text_weight }}">
+<body class="text-size-{{ text_size }} text-weight-{{ text_weight }} theme-{{ theme }}">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
     {% for msg in messages %}

@@ -26,15 +26,8 @@
     <div class="article-meta">
         {% if article.author %}{{ article.author }} · {% endif %}
         {% if article.word_count %}{{ article.word_count }} words · {% endif %}
-        {{ article.reading_time or "unknown" }}
+        {{ article.reading_time or "unknown" }}{% if article.tags %} · {% for t in article.tags %}{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
     </div>
-    {% if article.tags %}
-    <div class="article-tags">
-        {% for tag_name in article.tags %}
-        <a href="/?location={{ current_location }}&tag={{ tag_name }}">{{ tag_name }}</a>
-        {% endfor %}
-    </div>
-    {% endif %}
     {% if article.reading_progress and article.reading_progress > 0 %}
     <div class="progress-bar">
         <div class="progress-fill" style="width: {{ (article.reading_progress * 100) | int }}%"></div>
