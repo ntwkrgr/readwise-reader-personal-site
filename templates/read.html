@@ -5,6 +5,7 @@
 {% block content %}
 <div class="toolbar">
     <a href="/" class="btn">Back to list</a>
+    <a href="/settings" class="btn">Settings</a>
     <form action="/archive/{{ article.id }}" method="post" style="margin: 0;">
         <button type="submit" class="btn btn-dark">Archive</button>
     </form>
@@ -30,6 +31,7 @@
 
 <div class="toolbar" style="margin-top: 24px;">
     <a href="/" class="btn">Back to list</a>
+    <a href="/settings" class="btn">Settings</a>
     <form action="/archive/{{ article.id }}" method="post" style="margin: 0;">
         <button type="submit" class="btn btn-dark">Archive</button>
     </form>

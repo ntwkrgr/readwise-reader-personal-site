@@ -5,7 +5,7 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, make_response, redirect, render_template, request, url_for
 
 import requests as http_requests
 
@@ -159,6 +159,25 @@ def sanitize_html(html_content: str) -> str:
     return str(soup)
 
 
+# --- Cookie defaults ---
+
+TEXT_SIZE_COOKIE = "readwise_text_size"
+TEXT_WEIGHT_COOKIE = "readwise_text_weight"
+VALID_TEXT_SIZES = {"small", "medium", "large"}
+VALID_TEXT_WEIGHTS = {"normal", "bold"}
+
+
+@app.context_processor
+def inject_display_prefs():
+    size = request.cookies.get(TEXT_SIZE_COOKIE, "medium")
+    weight = request.cookies.get(TEXT_WEIGHT_COOKIE, "normal")
+    if size not in VALID_TEXT_SIZES:
+        size = "medium"
+    if weight not in VALID_TEXT_WEIGHTS:
+        weight = "normal"
+    return {"text_size": size, "text_weight": weight}
+
+
 # --- Routes ---
 
 
@@ -218,6 +237,45 @@ def do_archive(doc_id: str):
 
     flash("Article archived.")
     return redirect(url_for("article_list"))
+
+
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    if request.method == "POST":
+        size = request.form.get("text_size", "medium")
+        weight = request.form.get("text_weight", "normal")
+        if size not in VALID_TEXT_SIZES:
+            size = "medium"
+        if weight not in VALID_TEXT_WEIGHTS:
+            weight = "normal"
+        resp = make_response(redirect(request.referrer or url_for("article_list")))
+        resp.set_cookie(TEXT_SIZE_COOKIE, size, max_age=31536000)
+        resp.set_cookie(TEXT_WEIGHT_COOKIE, weight, max_age=31536000)
+        return resp
+    return render_template("settings.html")
+
+
+@app.route("/tags")
+def tag_picker():
+    location = request.args.get("location", "later")
+    if location not in VALID_LOCATIONS:
+        location = "later"
+    try:
+        data = fetch_article_list(location=location, page_cursor=None, tag=None)
+    except ReadwiseAPIError as e:
+        return render_template("error.html", message=str(e), retry_url=request.url)
+    tag_names: set[str] = set()
+    for article in data["results"]:
+        tags = article.get("tags") or {}
+        if isinstance(tags, dict):
+            tag_names.update(tags.keys())
+        elif isinstance(tags, list):
+            tag_names.update(tags)
+    return render_template(
+        "tags.html",
+        tags=sorted(tag_names),
+        current_location=location,
+    )
 
 
 if __name__ == "__main__":

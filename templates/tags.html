@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Filter by tag — {{ current_location | capitalize }}{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 22px; margin-bottom: 16px;">Filter by tag</h1>
+<p style="margin-bottom: 16px;">Choose a tag to filter articles in {{ current_location }}.</p>
+
+<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
+    <a href="/?location={{ current_location }}" class="btn">Show all</a>
+    {% for tag in tags %}
+    <a href="/?location={{ current_location }}&tag={{ tag | urlencode }}" class="btn">{{ tag }}</a>
+    {% endfor %}
+</div>
+
+{% if not tags %}
+<div class="empty">No tags in the first page of {{ current_location }}.</div>
+{% endif %}
+
+<p><a href="/?location={{ current_location }}" class="btn">Back to list</a></p>
+{% endblock %}

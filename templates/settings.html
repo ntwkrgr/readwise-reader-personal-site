@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Text settings{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 22px; margin-bottom: 16px;">Text settings</h1>
+
+<form method="post" action="/settings">
+    <div style="margin-bottom: 20px;">
+        <p style="font-weight: bold; margin-bottom: 8px;">Size</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <label style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="text_size" value="small" {{ 'checked' if text_size == 'small' else '' }}>
+                <span style="margin-left: 8px;">Small</span>
+            </label>
+            <label style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="text_size" value="medium" {{ 'checked' if text_size == 'medium' else '' }}>
+                <span style="margin-left: 8px;">Medium</span>
+            </label>
+            <label style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="text_size" value="large" {{ 'checked' if text_size == 'large' else '' }}>
+                <span style="margin-left: 8px;">Large</span>
+            </label>
+        </div>
+    </div>
+    <div style="margin-bottom: 24px;">
+        <p style="font-weight: bold; margin-bottom: 8px;">Weight</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <label style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="text_weight" value="normal" {{ 'checked' if text_weight == 'normal' else '' }}>
+                <span style="margin-left: 8px;">Normal</span>
+            </label>
+            <label style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="text_weight" value="bold" {{ 'checked' if text_weight == 'bold' else '' }}>
+                <span style="margin-left: 8px;">Bold</span>
+            </label>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-dark">Save</button>
+</form>
+
+<p style="margin-top: 20px;">
+    <a href="/" class="btn">Back to list</a>
+</p>
+{% endblock %}
