@@ -8,6 +8,7 @@
     <a href="/settings" class="btn">Settings</a>
     {% if highlighting_enabled and has_content %}
     <button type="button" id="save-highlight-btn" class="btn" disabled>Save highlight</button>
+    <button type="button" id="add-highlight-btn" class="btn">Add highlight (type or paste)</button>
     {% endif %}
     <form action="/archive/{{ article.id }}" method="post" style="margin: 0;">
         <button type="submit" class="btn btn-dark">Archive</button>
@@ -15,6 +16,16 @@
 </div>
 
 <div id="highlight-message" class="flash" style="display: none; margin-bottom: 16px;"></div>
+{% if highlighting_enabled and has_content %}
+<div id="highlight-form" style="display: none; margin-bottom: 16px; padding: 12px; border: 2px solid #000; border-radius: 8px;">
+    <p style="margin-bottom: 8px; font-weight: bold;">Type or paste the text to save as a highlight:</p>
+    <textarea id="highlight-textarea" rows="4" style="width: 100%; padding: 8px; font-family: Georgia, serif; font-size: 16px; margin-bottom: 8px;" placeholder="Paste or type the quote here..."></textarea>
+    <div style="display: flex; gap: 8px;">
+        <button type="button" id="highlight-form-save" class="btn btn-dark">Save to Readwise</button>
+        <button type="button" id="highlight-form-cancel" class="btn">Cancel</button>
+    </div>
+</div>
+{% endif %}
 
 <h1 style="font-size: 24px; margin-bottom: 4px;">{{ article.title }}</h1>
 {% if article.author %}
@@ -39,6 +50,7 @@
     <a href="/settings" class="btn">Settings</a>
     {% if highlighting_enabled and has_content %}
     <button type="button" id="save-highlight-btn-bottom" class="btn" disabled>Save highlight</button>
+    <button type="button" id="add-highlight-btn-bottom" class="btn">Add highlight (type or paste)</button>
     {% endif %}
     <form action="/archive/{{ article.id }}" method="post" style="margin: 0;">
         <button type="submit" class="btn btn-dark">Archive</button>
@@ -51,8 +63,14 @@
     var docId = {{ article.id | tojson }};
     var articleEl = document.getElementById('article-content');
     var msgEl = document.getElementById('highlight-message');
+    var formEl = document.getElementById('highlight-form');
+    var textareaEl = document.getElementById('highlight-textarea');
+    var lastSelectedText = '';
     function getSaveButtons() {
         return [document.getElementById('save-highlight-btn'), document.getElementById('save-highlight-btn-bottom')].filter(Boolean);
+    }
+    function getAddButtons() {
+        return [document.getElementById('add-highlight-btn'), document.getElementById('add-highlight-btn-bottom')].filter(Boolean);
     }
     function setButtonsEnabled(enabled) {
         getSaveButtons().forEach(function(btn) { btn.disabled = !enabled; });
@@ -64,23 +82,28 @@
         msgEl.style.color = '#fff';
         setTimeout(function() { msgEl.style.display = 'none'; }, 4000);
     }
-    function onSelect() {
+    function captureSelection() {
         var sel = window.getSelection();
         var text = (sel && sel.toString ? sel.toString() : '').trim();
+        if (text) lastSelectedText = text;
         setButtonsEnabled(text.length > 0);
     }
     if (articleEl) {
-        articleEl.addEventListener('mouseup', onSelect);
-        articleEl.addEventListener('touchend', function() { setTimeout(onSelect, 100); });
+        articleEl.addEventListener('mouseup', captureSelection);
+        articleEl.addEventListener('touchend', function() { setTimeout(captureSelection, 150); });
+        document.addEventListener('selectionchange', captureSelection);
     }
     function doSave() {
-        var sel = window.getSelection();
-        var text = (sel && sel.toString ? sel.toString() : '').trim();
+        var text = (window.getSelection && window.getSelection().toString().trim()) || lastSelectedText;
         if (!text) {
-            showMessage('Select text in the article first.', true);
+            showMessage('Select text in the article first, or use “Add highlight (type or paste)”.', true);
             return;
         }
         setButtonsEnabled(false);
+        lastSelectedText = '';
+        sendHighlight(text);
+    }
+    function sendHighlight(text) {
         fetch('/save-highlight', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -92,17 +115,36 @@
                     if (window.getSelection) window.getSelection().removeAllRanges();
                 } else {
                     showMessage(data.error || 'Failed to save.', true);
-                    onSelect();
+                    captureSelection();
                 }
             });
         }).catch(function() {
             showMessage('Network error.', true);
-            onSelect();
+            captureSelection();
         });
     }
-    getSaveButtons().forEach(function(btn) {
-        btn.addEventListener('click', doSave);
+    getSaveButtons().forEach(function(btn) { btn.addEventListener('click', doSave); });
+    function showForm() {
+        if (formEl) { formEl.style.display = 'block'; if (textareaEl) textareaEl.focus(); }
+    }
+    function hideForm() {
+        if (formEl) formEl.style.display = 'none';
+        if (textareaEl) textareaEl.value = '';
+    }
+    getAddButtons().forEach(function(btn) {
+        btn.addEventListener('click', function() { showForm(); });
     });
+    if (document.getElementById('highlight-form-cancel')) {
+        document.getElementById('highlight-form-cancel').addEventListener('click', hideForm);
+    }
+    if (document.getElementById('highlight-form-save') && textareaEl) {
+        document.getElementById('highlight-form-save').addEventListener('click', function() {
+            var text = textareaEl.value.trim();
+            if (!text) { showMessage('Enter or paste some text first.', true); return; }
+            hideForm();
+            sendHighlight(text);
+        });
+    }
 })();
 </script>
 {% endif %}
