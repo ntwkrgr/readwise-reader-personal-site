@@ -36,6 +36,15 @@
             <button type="submit" name="highlighting" value="on" class="settings-option {{ 'option-active' if highlighting_enabled else '' }}">On</button>
         </div>
     </div>
+    <div style="margin-bottom: 24px;">
+        <p style="font-weight: bold; margin-bottom: 8px;">Tap to advance</p>
+        <p class="settings-desc" style="font-size: 14px; color: #333; margin-bottom: 8px;">Tap zones and Buttons use a small script to advance one screen at a time. Off keeps normal scrolling (no JavaScript).</p>
+        <div class="option-group">
+            <button type="submit" name="tap_advance" value="off" class="settings-option {{ 'option-active' if tap_advance == 'off' else '' }}">Off</button>
+            <button type="submit" name="tap_advance" value="zones" class="settings-option {{ 'option-active' if tap_advance == 'zones' else '' }}">Tap zones</button>
+            <button type="submit" name="tap_advance" value="buttons" class="settings-option {{ 'option-active' if tap_advance == 'buttons' else '' }}">Buttons</button>
+        </div>
+    </div>
 </form>
 
 <p style="margin-top: 20px;">

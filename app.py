@@ -203,10 +203,12 @@ TEXT_SIZE_COOKIE = "readwise_text_size"
 TEXT_WEIGHT_COOKIE = "readwise_text_weight"
 THEME_COOKIE = "readwise_theme"
 HIGHLIGHTING_COOKIE = "readwise_highlighting"
+TAP_ADVANCE_COOKIE = "readwise_tap_advance"
 VALID_TEXT_SIZES = {"small", "medium", "large"}
 VALID_TEXT_WEIGHTS = {"normal", "bold"}
 VALID_THEMES = {"light", "dark"}
 VALID_HIGHLIGHTING = {"on", "off"}
+VALID_TAP_ADVANCE = {"off", "zones", "buttons"}
 
 READWISE_V2_HIGHLIGHTS = "https://readwise.io/api/v2/highlights/"
 
@@ -217,6 +219,7 @@ def inject_display_prefs():
     weight = request.cookies.get(TEXT_WEIGHT_COOKIE, "normal")
     theme = request.cookies.get(THEME_COOKIE, "light")
     highlighting = request.cookies.get(HIGHLIGHTING_COOKIE, "off")
+    tap_advance = request.cookies.get(TAP_ADVANCE_COOKIE, "off")
     if size not in VALID_TEXT_SIZES:
         size = "medium"
     if weight not in VALID_TEXT_WEIGHTS:
@@ -225,11 +228,14 @@ def inject_display_prefs():
         theme = "light"
     if highlighting not in VALID_HIGHLIGHTING:
         highlighting = "off"
+    if tap_advance not in VALID_TAP_ADVANCE:
+        tap_advance = "off"
     return {
         "text_size": size,
         "text_weight": weight,
         "theme": theme,
         "highlighting_enabled": highlighting == "on",
+        "tap_advance": tap_advance,
     }
 
 
@@ -381,6 +387,7 @@ def settings():
         weight = request.form.get("text_weight") or request.cookies.get(TEXT_WEIGHT_COOKIE, "normal")
         theme = request.form.get("theme") or request.cookies.get(THEME_COOKIE, "light")
         highlighting = request.form.get("highlighting") or request.cookies.get(HIGHLIGHTING_COOKIE, "off")
+        tap_advance = request.form.get("tap_advance") or request.cookies.get(TAP_ADVANCE_COOKIE, "off")
         if size not in VALID_TEXT_SIZES:
             size = "medium"
         if weight not in VALID_TEXT_WEIGHTS:
@@ -389,11 +396,14 @@ def settings():
             theme = "light"
         if highlighting not in VALID_HIGHLIGHTING:
             highlighting = "off"
+        if tap_advance not in VALID_TAP_ADVANCE:
+            tap_advance = "off"
         resp = make_response(redirect(request.referrer or url_for("article_list")))
         resp.set_cookie(TEXT_SIZE_COOKIE, size, max_age=31536000)
         resp.set_cookie(TEXT_WEIGHT_COOKIE, weight, max_age=31536000)
         resp.set_cookie(THEME_COOKIE, theme, max_age=31536000)
         resp.set_cookie(HIGHLIGHTING_COOKIE, highlighting, max_age=31536000)
+        resp.set_cookie(TAP_ADVANCE_COOKIE, tap_advance, max_age=31536000)
         return resp
     return render_template("settings.html")
 

@@ -47,7 +47,7 @@
 
 <div class="pagination">
     {% if next_cursor %}
-    <a href="/?location={{ current_location }}&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&cursor={{ next_cursor }}" class="btn">Next page</a>
+    <a href="/?location={{ current_location }}&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&cursor={{ next_cursor }}" class="btn" style="width: 100%; display: flex; align-items: center; justify-content: center;">Next page</a>
     {% endif %}
 </div>
 {% else %}
