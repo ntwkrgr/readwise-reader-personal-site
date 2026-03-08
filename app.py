@@ -1,4 +1,5 @@
 import os
+import random
 import uuid
 
 from typing import Any
@@ -19,6 +20,7 @@ READWISE_API_BASE = "https://readwise.io/api/v3"
 ARTICLES_PER_PAGE = 20
 
 VALID_LOCATIONS = {"later", "new", "archive", "feed"}
+VALID_SORTS = {"newest", "oldest", "random"}
 
 # --- Cache ---
 
@@ -104,6 +106,19 @@ def fetch_article_list(
     }
     _list_cache[cache_key] = result
     return result
+
+
+def _sort_articles(articles: list[dict[str, Any]], sort: str) -> list[dict[str, Any]]:
+    if sort == "random":
+        out = list(articles)
+        random.shuffle(out)
+        return out
+    # Use saved_at (date added) with created_at fallback
+    def sort_key(a: dict[str, Any]) -> str:
+        return a.get("saved_at") or a.get("created_at") or ""
+
+    out = sorted(articles, key=sort_key, reverse=(sort == "newest"))
+    return out
 
 
 def fetch_article(doc_id: str) -> dict[str, Any]:
@@ -203,6 +218,9 @@ def article_list():
     location = request.args.get("location", "later")
     if location not in VALID_LOCATIONS:
         location = "later"
+    sort = request.args.get("sort", "newest")
+    if sort not in VALID_SORTS:
+        sort = "newest"
     page_cursor = request.args.get("cursor")
     refresh = request.args.get("refresh")
     tag = request.args.get("tag")
@@ -215,12 +233,15 @@ def article_list():
     except ReadwiseAPIError as e:
         return render_template("error.html", message=str(e), retry_url=request.url)
 
+    articles = _sort_articles(data["results"], sort)
+
     return render_template(
         "list.html",
-        articles=data["results"],
+        articles=articles,
         next_cursor=data["nextPageCursor"],
         current_location=location,
         current_tag=tag,
+        current_sort=sort,
         count=data["count"],
     )
 
