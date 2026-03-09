@@ -34,7 +34,7 @@ The server starts on `0.0.0.0:5555` by default. Access it from your Kindle Scrib
 
 ## Usage
 
-- **Article list** shows your reading queue, defaulting to "Later". Tap the location tabs (Later / New / Archive) to switch views.
+- **Article list** shows your reading queue, defaulting to "Inbox". Tap the location tabs (Inbox / Later / Archive) to switch views.
 - **Tap an article title** to read it. Content is stripped of images and media for fast loading on e-ink.
 - **Archive** an article from the reader view with the Archive button. It disappears from your active list immediately.
 - **Refresh** the list manually if you've added new articles from another device.

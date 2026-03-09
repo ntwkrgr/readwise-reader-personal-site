@@ -6,14 +6,15 @@
 <h1 style="font-size: 22px; margin-bottom: 16px;">Filter by tag</h1>
 <p style="margin-bottom: 16px;">Choose a tag to filter articles in {{ current_location }}.</p>
 
-<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
-    <a href="/?location={{ current_location }}" class="btn">Show all</a>
-    {% for tag in tags %}
-    <a href="/?location={{ current_location }}&tag={{ tag | urlencode }}" class="btn">{{ tag }}</a>
-    {% endfor %}
-</div>
+<p style="margin-bottom: 12px;"><a href="/?location={{ current_location }}" class="btn">Show all</a></p>
 
-{% if not tags %}
+{% if tags %}
+<ul class="tag-list" style="list-style: none; margin: 0; padding: 0;">
+    {% for tag in tags %}
+    <li><a href="/?location={{ current_location }}&tag={{ tag | urlencode }}" class="tag-list-link">{{ tag }}</a></li>
+    {% endfor %}
+</ul>
+{% else %}
 <div class="empty">No tags in the first page of {{ current_location }}.</div>
 {% endif %}
 

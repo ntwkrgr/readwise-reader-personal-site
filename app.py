@@ -1,4 +1,5 @@
 import os
+import random
 import uuid
 import random
 
@@ -26,10 +27,12 @@ VALID_SORTS = {"newest", "oldest", "random"}
 
 _list_cache: dict[tuple[str, str | None, str | None], dict[str, Any]] = {}
 _article_cache: dict[str, dict[str, Any]] = {}
+_tag_cache: dict[str, list[str]] = {}
 
 
 def invalidate_list_cache() -> None:
     _list_cache.clear()
+    _tag_cache.clear()
 
 
 def invalidate_article_cache(doc_id: str) -> None:
@@ -67,8 +70,24 @@ def _handle_api_response(resp: http_requests.Response) -> dict[str, Any]:
     return resp.json()
 
 
+VIDEO_DOMAINS = {"youtube.com", "youtu.be", "vimeo.com"}
+
+
+def _is_video_url(url: str | None) -> bool:
+    if not url or not url.strip():
+        return False
+    try:
+        parsed = urlparse(url)
+        netloc = (parsed.netloc or "").lower()
+        if netloc.startswith("www."):
+            netloc = netloc[4:]
+        return netloc in VIDEO_DOMAINS
+    except Exception:
+        return False
+
+
 def fetch_article_list(
-    location: str = "later",
+    location: str = "new",
     page_cursor: str | None = None,
     tag: str | None = None,
 ) -> dict[str, Any]:
@@ -99,12 +118,58 @@ def fetch_article_list(
     data = _handle_api_response(resp)
 
     results = [r for r in data.get("results", []) if r.get("parent_id") is None]
+    results = [
+        r
+        for r in results
+        if r.get("category") != "video"
+        and not _is_video_url(r.get("source_url") or r.get("url"))
+    ]
     result = {
         "results": results,
         "nextPageCursor": data.get("nextPageCursor"),
         "count": data.get("count", 0),
     }
     _list_cache[cache_key] = result
+    return result
+
+
+def _sort_articles(articles: list[dict[str, Any]], sort: str) -> list[dict[str, Any]]:
+    if sort == "random":
+        out = list(articles)
+        random.shuffle(out)
+        return out
+    # Use saved_at (date added) with created_at fallback
+    def sort_key(a: dict[str, Any]) -> str:
+        return a.get("saved_at") or a.get("created_at") or ""
+
+    out = sorted(articles, key=sort_key, reverse=(sort == "newest"))
+    return out
+
+
+def _extract_tags(results: list[dict[str, Any]]) -> set[str]:
+    tags: set[str] = set()
+    for a in results:
+        tags_data = a.get("tags") or {}
+        if isinstance(tags_data, dict):
+            tags.update(tags_data.keys())
+        elif isinstance(tags_data, list):
+            tags.update(tags_data)
+    return tags
+
+
+def fetch_all_tags(location: str) -> list[str]:
+    if location in _tag_cache:
+        return _tag_cache[location]
+    tag_names: set[str] = set()
+    cursor: str | None = None
+    while True:
+        data = fetch_article_list(location=location, page_cursor=cursor, tag=None)
+        tag_names.update(_extract_tags(data["results"]))
+        cursor = data.get("nextPageCursor")
+        if not cursor:
+            break
+    result = sorted(tag_names)
+    _tag_cache[location] = result
     return result
 
 
@@ -172,6 +237,7 @@ VALID_TEXT_SIZES = {"small", "medium", "large"}
 VALID_TEXT_WEIGHTS = {"normal", "bold"}
 VALID_THEMES = {"light", "dark"}
 VALID_HIGHLIGHTING = {"on", "off"}
+VALID_TAP_ADVANCE = {"off", "zones", "buttons"}
 
 READWISE_V2_HIGHLIGHTS = "https://readwise.io/api/v2/highlights/"
 
@@ -220,7 +286,7 @@ def _sort_articles(articles: list[dict[str, Any]], sort: str) -> list[dict[str, 
 
 @app.route("/")
 def article_list():
-    location = request.args.get("location", "later")
+    location = request.args.get("location", "new")
     if location not in VALID_LOCATIONS:
         location = "later"
     sort = request.cookies.get(SORT_COOKIE, "newest")
@@ -248,6 +314,7 @@ def article_list():
         current_tag=tag,
         current_sort=sort,
         count=data["count"],
+        available_tags=available_tags,
     )
 
 
@@ -385,23 +452,16 @@ def settings():
 
 @app.route("/tags")
 def tag_picker():
-    location = request.args.get("location", "later")
+    location = request.args.get("location", "new")
     if location not in VALID_LOCATIONS:
-        location = "later"
+        location = "new"
     try:
-        data = fetch_article_list(location=location, page_cursor=None, tag=None)
+        all_tags = fetch_all_tags(location)
     except ReadwiseAPIError as e:
         return render_template("error.html", message=str(e), retry_url=request.url)
-    tag_names: set[str] = set()
-    for article in data["results"]:
-        tags = article.get("tags") or {}
-        if isinstance(tags, dict):
-            tag_names.update(tags.keys())
-        elif isinstance(tags, list):
-            tag_names.update(tags)
     return render_template(
         "tags.html",
-        tags=sorted(tag_names),
+        tags=all_tags,
         current_location=location,
     )
 

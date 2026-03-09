@@ -1,23 +1,49 @@
 {% extends "base.html" %}
 
-{% block title %}Articles — {{ current_location | capitalize }}{% if current_tag %} [{{ current_tag }}]{% endif %}{% endblock %}
+{% block title %}Articles — {% if current_location == 'new' %}Inbox{% else %}{{ current_location | capitalize }}{% endif %}{% if current_tag %} [{{ current_tag }}]{% endif %}{% endblock %}
 
 {% block content %}
 <nav class="nav">
-    <div class="nav-group">
-        <a href="/?location=later{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'later' else '' }}">Later</a>
-        <a href="/?location=new{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'new' else '' }}">New</a>
-        <a href="/?location=archive{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'archive' else '' }}">Archive</a>
-        <a href="/tags?location={{ current_location }}">Tags</a>
-        <a href="/?location={{ current_location }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&refresh=1">Refresh</a>
+    <details class="nav-dropdown">
+        <summary class="btn" style="font-size: 14px; padding: 6px 16px; min-height: 36px;">{% if current_location == 'new' %}Inbox{% elif current_location == 'later' %}Later{% elif current_location == 'archive' %}Archive{% else %}{{ current_location | capitalize }}{% endif %}</summary>
+        <div class="nav-dropdown-options">
+            <a href="/?location=new&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'new' else '' }}">Inbox</a>
+            <a href="/?location=later&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'later' else '' }}">Later</a>
+            <a href="/?location=archive&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'archive' else '' }}">Archive</a>
+        </div>
+    </details>
+    <details class="nav-dropdown">
+        <summary class="btn" style="font-size: 14px; padding: 6px 16px; min-height: 36px;">{% if current_tag %}Tag: {{ current_tag }}{% else %}Tags{% endif %}</summary>
+        <div class="nav-dropdown-options">
+            {% if current_tag %}
+            <a href="/?location={{ current_location }}&sort={{ current_sort }}" class="active">Show all</a>
+            {% endif %}
+            {% for tag in available_tags %}
+            <a href="/?location={{ current_location }}&sort={{ current_sort }}&tag={{ tag | urlencode }}" class="{{ 'active' if current_tag == tag else '' }}">{{ tag }}</a>
+            {% endfor %}
+            {% if not available_tags %}
+            <a href="/tags?location={{ current_location }}">No tags on this page</a>
+            {% endif %}
+        </div>
+    </details>
+    <details class="nav-dropdown">
+        <summary class="btn" style="font-size: 14px; padding: 6px 16px; min-height: 36px;">Sort: {% if current_sort == 'newest' %}Newest{% elif current_sort == 'oldest' %}Oldest{% else %}Random{% endif %}</summary>
+        <div class="nav-dropdown-options">
+            <a href="/?location={{ current_location }}&sort=newest{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_sort == 'newest' else '' }}">Date Added (Newest)</a>
+            <a href="/?location={{ current_location }}&sort=oldest{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_sort == 'oldest' else '' }}">Date Added (Oldest)</a>
+            <a href="/?location={{ current_location }}&sort=random{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_sort == 'random' else '' }}">Random</a>
+        </div>
+    </details>
+    <div class="nav-icons">
+        <a href="/?location={{ current_location }}&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&refresh=1" class="nav-icon" title="Refresh">&#x21bb;</a>
+        <a href="/settings" class="nav-icon" title="Settings">&#x2699;</a>
     </div>
-    <a href="/settings" class="nav-settings">Settings</a>
 </nav>
 
 {% if current_tag %}
 <div class="tag-filter">
     Filtered by tag: <strong>{{ current_tag }}</strong>
-    <a href="/?location={{ current_location }}" class="btn" style="margin-left: 8px; padding: 6px 16px; min-height: 36px; font-size: 14px;">Clear</a>
+    <a href="/?location={{ current_location }}&sort={{ current_sort }}" class="btn" style="margin-left: 8px; padding: 6px 16px; min-height: 36px; font-size: 14px;">Clear</a>
 </div>
 {% endif %}
 
@@ -40,7 +66,7 @@
 
 <div class="pagination">
     {% if next_cursor %}
-    <a href="/?location={{ current_location }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&cursor={{ next_cursor }}" class="btn">Next page</a>
+    <a href="/?location={{ current_location }}&sort={{ current_sort }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&cursor={{ next_cursor }}" class="btn" style="width: 100%; display: flex; align-items: center; justify-content: center;">Next page</a>
     {% endif %}
 </div>
 {% else %}
