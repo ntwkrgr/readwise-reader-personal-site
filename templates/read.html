@@ -8,6 +8,8 @@
     <a href="/settings" class="btn">Settings</a>
     {% if highlighting_enabled and has_content %}
     <button type="button" id="save-highlight-btn" class="btn" disabled>Save highlight</button>
+    {% elif has_content %}
+    <a href="/read/{{ article.id }}/note" class="btn">Add note</a>
     {% endif %}
     <form action="/archive/{{ article.id }}" method="post" style="margin: 0;">
         <button type="submit" class="btn btn-dark">Archive</button>
@@ -39,6 +41,8 @@
     <a href="/settings" class="btn">Settings</a>
     {% if highlighting_enabled and has_content %}
     <button type="button" id="save-highlight-btn-bottom" class="btn" disabled>Save highlight</button>
+    {% elif has_content %}
+    <a href="/read/{{ article.id }}/note" class="btn">Add note</a>
     {% endif %}
     <form action="/archive/{{ article.id }}" method="post" style="margin: 0;">
         <button type="submit" class="btn btn-dark">Archive</button>

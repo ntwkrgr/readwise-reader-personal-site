@@ -1,5 +1,6 @@
 import os
 import uuid
+import random
 
 from typing import Any
 
@@ -19,6 +20,7 @@ READWISE_API_BASE = "https://readwise.io/api/v3"
 ARTICLES_PER_PAGE = 20
 
 VALID_LOCATIONS = {"later", "new", "archive", "feed"}
+VALID_SORTS = {"newest", "oldest", "random"}
 
 # --- Cache ---
 
@@ -165,6 +167,7 @@ TEXT_SIZE_COOKIE = "readwise_text_size"
 TEXT_WEIGHT_COOKIE = "readwise_text_weight"
 THEME_COOKIE = "readwise_theme"
 HIGHLIGHTING_COOKIE = "readwise_highlighting"
+SORT_COOKIE = "readwise_sort"
 VALID_TEXT_SIZES = {"small", "medium", "large"}
 VALID_TEXT_WEIGHTS = {"normal", "bold"}
 VALID_THEMES = {"light", "dark"}
@@ -179,6 +182,7 @@ def inject_display_prefs():
     weight = request.cookies.get(TEXT_WEIGHT_COOKIE, "normal")
     theme = request.cookies.get(THEME_COOKIE, "light")
     highlighting = request.cookies.get(HIGHLIGHTING_COOKIE, "off")
+    default_sort = request.cookies.get(SORT_COOKIE, "newest")
     if size not in VALID_TEXT_SIZES:
         size = "medium"
     if weight not in VALID_TEXT_WEIGHTS:
@@ -187,12 +191,28 @@ def inject_display_prefs():
         theme = "light"
     if highlighting not in VALID_HIGHLIGHTING:
         highlighting = "off"
+    if default_sort not in VALID_SORTS:
+        default_sort = "newest"
     return {
         "text_size": size,
         "text_weight": weight,
         "theme": theme,
         "highlighting_enabled": highlighting == "on",
+        "default_sort": default_sort,
     }
+
+
+def _sort_articles(articles: list[dict[str, Any]], sort: str) -> list[dict[str, Any]]:
+    if sort == "random":
+        out = list(articles)
+        random.shuffle(out)
+        return out
+
+    def sort_key(a: dict[str, Any]) -> str:
+        # Use saved_at (date added) with created_at fallback
+        return a.get("saved_at") or a.get("created_at") or ""
+
+    return sorted(articles, key=sort_key, reverse=(sort == "newest"))
 
 
 # --- Routes ---
@@ -203,6 +223,9 @@ def article_list():
     location = request.args.get("location", "later")
     if location not in VALID_LOCATIONS:
         location = "later"
+    sort = request.cookies.get(SORT_COOKIE, "newest")
+    if sort not in VALID_SORTS:
+        sort = "newest"
     page_cursor = request.args.get("cursor")
     refresh = request.args.get("refresh")
     tag = request.args.get("tag")
@@ -215,12 +238,15 @@ def article_list():
     except ReadwiseAPIError as e:
         return render_template("error.html", message=str(e), retry_url=request.url)
 
+    articles = _sort_articles(data["results"], sort)
+
     return render_template(
         "list.html",
-        articles=data["results"],
+        articles=articles,
         next_cursor=data["nextPageCursor"],
         current_location=location,
         current_tag=tag,
+        current_sort=sort,
         count=data["count"],
     )
 
@@ -274,6 +300,30 @@ def save_highlight_to_readwise(article: dict[str, Any], text: str, note: str = "
         raise ReadwiseAPIError(f"Readwise returned an error (HTTP {resp.status_code}).")
 
 
+@app.route("/read/<doc_id>/note", methods=["GET", "POST"])
+def add_note(doc_id: str):
+    if request.method == "POST":
+        text = (request.form.get("text") or "").strip()
+        if not text:
+            flash("Enter some text for the note.")
+            return redirect(url_for("add_note", doc_id=doc_id))
+        try:
+            article = fetch_article(doc_id)
+        except ReadwiseAPIError as e:
+            return render_template("error.html", message=str(e), retry_url=url_for("read_article", doc_id=doc_id))
+        try:
+            save_highlight_to_readwise(article, text)
+        except ReadwiseAPIError as e:
+            return render_template("error.html", message=str(e), retry_url=url_for("add_note", doc_id=doc_id))
+        flash("Note saved to Readwise.")
+        return redirect(url_for("read_article", doc_id=doc_id))
+    try:
+        article = fetch_article(doc_id)
+    except ReadwiseAPIError as e:
+        return render_template("error.html", message=str(e), retry_url=url_for("article_list"))
+    return render_template("note.html", article=article)
+
+
 @app.route("/save-highlight", methods=["POST"])
 def save_highlight():
     if not request.is_json:
@@ -312,6 +362,7 @@ def settings():
         weight = request.form.get("text_weight", "normal")
         theme = request.form.get("theme", "light")
         highlighting = request.form.get("highlighting", "off")
+        default_sort = request.form.get("default_sort", "newest")
         if size not in VALID_TEXT_SIZES:
             size = "medium"
         if weight not in VALID_TEXT_WEIGHTS:
@@ -320,11 +371,14 @@ def settings():
             theme = "light"
         if highlighting not in VALID_HIGHLIGHTING:
             highlighting = "off"
+        if default_sort not in VALID_SORTS:
+            default_sort = "newest"
         resp = make_response(redirect(request.referrer or url_for("article_list")))
         resp.set_cookie(TEXT_SIZE_COOKIE, size, max_age=31536000)
         resp.set_cookie(TEXT_WEIGHT_COOKIE, weight, max_age=31536000)
         resp.set_cookie(THEME_COOKIE, theme, max_age=31536000)
         resp.set_cookie(HIGHLIGHTING_COOKIE, highlighting, max_age=31536000)
+        resp.set_cookie(SORT_COOKIE, default_sort, max_age=31536000)
         return resp
     return render_template("settings.html")
 

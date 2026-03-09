@@ -50,6 +50,23 @@
         </div>
     </div>
     <div style="margin-bottom: 24px;">
+        <p style="font-weight: bold; margin-bottom: 8px;">Default sort</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="default_sort" value="newest" {{ 'checked' if default_sort == 'newest' else '' }}>
+                <span style="margin-left: 8px;">Newest</span>
+            </label>
+            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="default_sort" value="oldest" {{ 'checked' if default_sort == 'oldest' else '' }}>
+                <span style="margin-left: 8px;">Oldest</span>
+            </label>
+            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="default_sort" value="random" {{ 'checked' if default_sort == 'random' else '' }}>
+                <span style="margin-left: 8px;">Random</span>
+            </label>
+        </div>
+    </div>
+    <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Highlighting</p>
         <p style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, article pages use a small script so you can select text and save highlights to Readwise. Off keeps the site minimal (no JavaScript).</p>
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
