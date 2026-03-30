@@ -4,17 +4,7 @@ A lightweight, server-side rendered web app for reading your Readwise Reader art
 
 ## Setup
 
-1. **Clone and install dependencies:**
-
-```bash
-git clone https://github.com/ntwkrgr/readwise-reader-personal-site.git
-cd readwise-reader-personal-site
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-2. **Configure your Readwise token:**
+1. **Configure your Readwise token:**
 
 Get your access token from [readwise.io/access_token](https://readwise.io/access_token), then create a `.env` file:
 
@@ -24,13 +14,24 @@ cp .env.example .env
 
 Edit `.env` and replace `your_readwise_access_token_here` with your actual token. Optionally set `SECRET_KEY` to any random string (used for flash message session cookies).
 
-3. **Run the server:**
+2. **Start with Docker:**
 
 ```bash
-python app.py
+docker compose up -d
 ```
 
-The server starts on `0.0.0.0:5555` by default. Access it from your Kindle Scribe at `http://<your-machine-ip>:5555`. Set the `PORT` environment variable in `.env` to change it.
+The site runs at `http://127.0.0.1:5555`. Access it from your Kindle Scribe at `http://<your-machine-ip>:5555`.
+
+The container automatically restarts on crash. To survive reboots, enable **"Start Docker Desktop when you log in"** in Docker Desktop → Settings → General.
+
+## Docker commands
+
+| Action | Command |
+|--------|---------|
+| Start | `docker compose up -d` |
+| Stop | `docker compose down` |
+| Logs | `docker compose logs -f` |
+| Rebuild after code change | `docker compose up -d --build` |
 
 ## Usage
 
