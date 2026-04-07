@@ -1,6 +1,6 @@
 # Kindle Scribe Readwise Reader
 
-A lightweight, server-side rendered web app for reading your Readwise Reader articles on a Kindle Scribe. No JavaScript, no images, no bloat -- just text.
+A lightweight, server-side rendered web app for reading your Readwise Reader articles on a Kindle Scribe. No JavaScript, no images, no bloat — just text.
 
 ## Setup
 
@@ -36,9 +36,22 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 ## Usage
 
 - **Article list** shows your reading queue, defaulting to "Later". Tap the location tabs (Later / New / Archive) to switch views.
+- **Filter by tag** using the tag picker at the top of the list — useful for keeping a focused reading queue.
 - **Tap an article title** to read it. Content is stripped of images and media for fast loading on e-ink.
-- **Archive** an article from the reader view with the Archive button. It disappears from your active list immediately.
+- **Archive** an article from the reader view with the **Archive** button. It disappears from your active list immediately.
 - **Refresh** the list manually if you've added new articles from another device.
+
+## Reader Settings
+
+The **Settings** panel — accessible from the reader view — lets you tune the reading experience for your display and preference:
+
+- **Text size** — scale up or down from the default for comfortable reading on e-ink.
+- **Font weight** — adjust between light and bold to suit your screen's contrast.
+- **Highlighting** — optionally enable highlight rendering for articles with Readwise highlights.
+- **Dark mode** — invert to a dark background for low-light reading.
+- **Sort order** — sort your article list by date added, or by note activity if you're working through annotated reading.
+
+Settings persist across sessions.
 
 ## Kindle Scribe Browser Notes
 
