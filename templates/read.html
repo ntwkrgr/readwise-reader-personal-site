@@ -49,6 +49,82 @@
     </form>
 </div>
 
+{% if tap_advance_enabled and has_content %}
+<script>
+(function() {
+    var articleEl = document.getElementById('article-content');
+    if (!articleEl) return;
+    var OVERLAP = 80;          // px of the previous screen kept visible
+    var TAP_THRESHOLD = 10;    // px movement still counts as a tap, not a swipe
+    var startX = null;
+    var startY = null;
+    var handledTouch = false;
+
+    function isInLink(target) {
+        var t = target;
+        while (t && t !== articleEl) {
+            if (t.tagName === 'A') return true;
+            t = t.parentNode;
+        }
+        return false;
+    }
+
+    function advance() {
+        var viewport = window.innerHeight || document.documentElement.clientHeight || 600;
+        var pageH = Math.max(
+            document.body.scrollHeight || 0,
+            document.documentElement.scrollHeight || 0
+        );
+        var current = window.pageYOffset;
+        if (typeof current !== 'number') {
+            current = document.documentElement.scrollTop || document.body.scrollTop || 0;
+        }
+        var maxScroll = pageH - viewport;
+        if (maxScroll <= 0) return;            // whole article fits on one screen
+        if (current >= maxScroll - 2) return;  // already at the bottom
+        var amount = viewport - OVERLAP;
+        if (amount < 100) amount = 100;
+        window.scrollBy(0, amount);
+    }
+
+    function tryAdvance(target) {
+        if (isInLink(target)) return;
+        advance();
+    }
+
+    articleEl.addEventListener('touchstart', function(e) {
+        if (e.touches && e.touches.length === 1) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        } else {
+            startX = null;
+            startY = null;
+        }
+    }, false);
+
+    articleEl.addEventListener('touchend', function(e) {
+        if (startY === null) return;
+        var t = e.changedTouches && e.changedTouches[0];
+        var sx = startX, sy = startY;
+        startX = null;
+        startY = null;
+        if (!t) return;
+        var dx = Math.abs(t.clientX - sx);
+        var dy = Math.abs(t.clientY - sy);
+        if (dx > TAP_THRESHOLD || dy > TAP_THRESHOLD) return; // swipe/scroll, not a tap
+        handledTouch = true;
+        tryAdvance(e.target);
+        setTimeout(function() { handledTouch = false; }, 500);
+    }, false);
+
+    articleEl.addEventListener('click', function(e) {
+        if (handledTouch) return;
+        tryAdvance(e.target);
+    }, false);
+})();
+</script>
+{% endif %}
+
 {% if highlighting_enabled and has_content %}
 <script>
 (function() {

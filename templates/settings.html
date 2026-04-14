@@ -80,6 +80,20 @@
             </label>
         </div>
     </div>
+    <div style="margin-bottom: 24px;">
+        <p style="font-weight: bold; margin-bottom: 8px;">Tap to advance page</p>
+        <p style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, tapping the article body advances one screen instead of requiring you to scroll. Off keeps normal scrolling (no JavaScript on the reader).</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="tap_advance" value="off" {{ 'checked' if not tap_advance_enabled else '' }}>
+                <span style="margin-left: 8px;">Off</span>
+            </label>
+            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
+                <input type="radio" name="tap_advance" value="on" {{ 'checked' if tap_advance_enabled else '' }}>
+                <span style="margin-left: 8px;">On</span>
+            </label>
+        </div>
+    </div>
     <button type="submit" class="btn btn-dark">Save</button>
 </form>
 

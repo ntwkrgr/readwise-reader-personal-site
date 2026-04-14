@@ -167,11 +167,13 @@ TEXT_SIZE_COOKIE = "readwise_text_size"
 TEXT_WEIGHT_COOKIE = "readwise_text_weight"
 THEME_COOKIE = "readwise_theme"
 HIGHLIGHTING_COOKIE = "readwise_highlighting"
+TAP_ADVANCE_COOKIE = "readwise_tap_advance"
 SORT_COOKIE = "readwise_sort"
 VALID_TEXT_SIZES = {"small", "medium", "large"}
 VALID_TEXT_WEIGHTS = {"normal", "bold"}
 VALID_THEMES = {"light", "dark"}
 VALID_HIGHLIGHTING = {"on", "off"}
+VALID_TAP_ADVANCE = {"on", "off"}
 
 READWISE_V2_HIGHLIGHTS = "https://readwise.io/api/v2/highlights/"
 
@@ -182,6 +184,7 @@ def inject_display_prefs():
     weight = request.cookies.get(TEXT_WEIGHT_COOKIE, "normal")
     theme = request.cookies.get(THEME_COOKIE, "light")
     highlighting = request.cookies.get(HIGHLIGHTING_COOKIE, "off")
+    tap_advance = request.cookies.get(TAP_ADVANCE_COOKIE, "off")
     default_sort = request.cookies.get(SORT_COOKIE, "newest")
     if size not in VALID_TEXT_SIZES:
         size = "medium"
@@ -191,6 +194,8 @@ def inject_display_prefs():
         theme = "light"
     if highlighting not in VALID_HIGHLIGHTING:
         highlighting = "off"
+    if tap_advance not in VALID_TAP_ADVANCE:
+        tap_advance = "off"
     if default_sort not in VALID_SORTS:
         default_sort = "newest"
     return {
@@ -198,6 +203,7 @@ def inject_display_prefs():
         "text_weight": weight,
         "theme": theme,
         "highlighting_enabled": highlighting == "on",
+        "tap_advance_enabled": tap_advance == "on",
         "default_sort": default_sort,
     }
 
@@ -362,6 +368,7 @@ def settings():
         weight = request.form.get("text_weight", "normal")
         theme = request.form.get("theme", "light")
         highlighting = request.form.get("highlighting", "off")
+        tap_advance = request.form.get("tap_advance", "off")
         default_sort = request.form.get("default_sort", "newest")
         if size not in VALID_TEXT_SIZES:
             size = "medium"
@@ -371,6 +378,8 @@ def settings():
             theme = "light"
         if highlighting not in VALID_HIGHLIGHTING:
             highlighting = "off"
+        if tap_advance not in VALID_TAP_ADVANCE:
+            tap_advance = "off"
         if default_sort not in VALID_SORTS:
             default_sort = "newest"
         resp = make_response(redirect(request.referrer or url_for("article_list")))
@@ -378,6 +387,7 @@ def settings():
         resp.set_cookie(TEXT_WEIGHT_COOKIE, weight, max_age=31536000)
         resp.set_cookie(THEME_COOKIE, theme, max_age=31536000)
         resp.set_cookie(HIGHLIGHTING_COOKIE, highlighting, max_age=31536000)
+        resp.set_cookie(TAP_ADVANCE_COOKIE, tap_advance, max_age=31536000)
         resp.set_cookie(SORT_COOKIE, default_sort, max_age=31536000)
         return resp
     return render_template("settings.html")
