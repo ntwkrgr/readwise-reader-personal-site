@@ -265,9 +265,10 @@
         body.theme-dark article th,
         body.theme-dark article td { border-color: #fff; }
         .settings-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+            display: inline-flex;
+            border: 2px solid #000;
+            border-radius: 8px;
+            overflow: hidden;
         }
         .settings-radio {
             position: absolute;
@@ -281,26 +282,31 @@
             align-items: center;
             min-height: 48px;
             padding: 0 16px;
-            border: 2px solid #000;
-            border-radius: 8px;
+            border: none;
+            border-right: 2px solid #000;
             background: #fff;
             color: #000;
             font-size: 16px;
             cursor: pointer;
         }
+        .settings-group .settings-option:last-of-type {
+            border-right: none;
+        }
         .settings-radio:checked + .settings-option {
             background: #000;
             color: #fff;
         }
+        body.theme-dark .settings-group {
+            border-color: #fff;
+        }
         body.theme-dark .settings-option {
             background: #000;
             color: #fff;
-            border-color: #fff;
+            border-right-color: #fff;
         }
         body.theme-dark .settings-radio:checked + .settings-option {
             background: #fff;
             color: #000;
-            border-color: #fff;
         }
         .tap-overlay {
             position: fixed;
