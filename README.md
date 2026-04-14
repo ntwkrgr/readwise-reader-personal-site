@@ -35,10 +35,12 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 
 ## Usage
 
-- **Article list** shows your reading queue, defaulting to "Later". Tap the location tabs (Later / New / Archive) to switch views.
+- **Article list** defaults to **All** and combines eligible items from Later and New only.
+- Eligible items are **Articles** and **RSS** entries; archive, feed-only, and video items are excluded.
+- Use location tabs (All / Later / New) to narrow the list when needed.
 - **Filter by tag** using the tag picker at the top of the list — useful for keeping a focused reading queue.
 - **Tap an article title** to read it. Content is stripped of images and media for fast loading on e-ink.
-- **Archive** an article from the reader view with the **Archive** button. It disappears from your active list immediately.
+- **Archive** an article from the reader view with the **Archive** button. Archived items are intentionally excluded from list and reader access.
 - **Refresh** the list manually if you've added new articles from another device.
 
 ## Reader Settings

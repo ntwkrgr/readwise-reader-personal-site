@@ -19,17 +19,19 @@ READWISE_TOKEN = os.environ.get("READWISE_TOKEN", "")
 READWISE_API_BASE = "https://readwise.io/api/v3"
 ARTICLES_PER_PAGE = 20
 
-VALID_LOCATIONS = {"later", "new", "archive", "feed"}
+VALID_LOCATIONS = {"all", "later", "new"}
 VALID_SORTS = {"newest", "oldest", "random"}
 
 # --- Cache ---
 
 _list_cache: dict[tuple[str, str | None, str | None], dict[str, Any]] = {}
 _article_cache: dict[str, dict[str, Any]] = {}
+_all_count_cache: dict[str | None, int] = {}
 
 
 def invalidate_list_cache() -> None:
     _list_cache.clear()
+    _all_count_cache.clear()
 
 
 def invalidate_article_cache(doc_id: str) -> None:
@@ -72,15 +74,14 @@ def fetch_article_list(
     page_cursor: str | None = None,
     tag: str | None = None,
 ) -> dict[str, Any]:
+    if location == "all":
+        return fetch_all_active_articles(page_cursor=page_cursor, tag=tag)
+
     cache_key = (location, page_cursor, tag)
     if cache_key in _list_cache:
         return _list_cache[cache_key]
 
-    params: dict[str, str | int] = {
-        "location": location,
-        "category": "article",
-        "limit": ARTICLES_PER_PAGE,
-    }
+    params: dict[str, str | int] = {"location": location, "limit": ARTICLES_PER_PAGE}
     if page_cursor:
         params["pageCursor"] = page_cursor
     if tag:
@@ -98,11 +99,82 @@ def fetch_article_list(
 
     data = _handle_api_response(resp)
 
-    results = [r for r in data.get("results", []) if r.get("parent_id") is None]
+    results = [_ for _ in data.get("results", []) if _is_included_new_or_later_item(_)]
     result = {
         "results": results,
         "nextPageCursor": data.get("nextPageCursor"),
         "count": data.get("count", 0),
+    }
+    _list_cache[cache_key] = result
+    return result
+
+
+def _is_included_new_or_later_item(item: dict[str, Any]) -> bool:
+    return (
+        item.get("parent_id") is None
+        and item.get("location") in {"new", "later"}
+        and item.get("category") in {"article", "rss"}
+    )
+
+
+def _fetch_location_count(location: str, category: str | None, tag: str | None) -> int:
+    params: dict[str, str | int] = {"location": location, "limit": 1}
+    if category:
+        params["category"] = category
+    if tag:
+        params["tag"] = tag
+    try:
+        resp = http_requests.get(
+            f"{READWISE_API_BASE}/list/",
+            headers=_api_headers(),
+            params=params,
+            timeout=15,
+        )
+    except http_requests.RequestException:
+        raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
+    data = _handle_api_response(resp)
+    return int(data.get("count", 0) or 0)
+
+
+def _count_all_included_items(tag: str | None) -> int:
+    if tag in _all_count_cache:
+        return _all_count_cache[tag]
+    total = 0
+    for location in ("later", "new"):
+        total += _fetch_location_count(location=location, category="article", tag=tag)
+        total += _fetch_location_count(location=location, category="rss", tag=tag)
+    _all_count_cache[tag] = max(total, 0)
+    return _all_count_cache[tag]
+
+
+def fetch_all_active_articles(
+    page_cursor: str | None = None, tag: str | None = None
+) -> dict[str, Any]:
+    """
+    Pull article/RSS records from Later + New only.
+    """
+    cache_key = ("all", page_cursor, tag)
+    if cache_key in _list_cache:
+        return _list_cache[cache_key]
+
+    all_articles: dict[str, dict[str, Any]] = {}
+    for location in ("later", "new"):
+        cursor: str | None = None
+        while True:
+            batch = fetch_article_list(location=location, page_cursor=cursor, tag=tag)
+            for article in batch["results"]:
+                article_id = str(article.get("id", ""))
+                if article_id:
+                    all_articles.setdefault(article_id, article)
+            cursor = batch.get("nextPageCursor")
+            if not cursor:
+                break
+
+    collected = list(all_articles.values())
+    result = {
+        "results": collected[:ARTICLES_PER_PAGE],
+        "nextPageCursor": None,
+        "count": _count_all_included_items(tag=tag),
     }
     _list_cache[cache_key] = result
     return result
@@ -129,6 +201,10 @@ def fetch_article(doc_id: str) -> dict[str, Any]:
         raise ReadwiseAPIError("Article not found.")
 
     article = results[0]
+    if not _is_included_new_or_later_item(article):
+        raise ReadwiseAPIError(
+            "This reader only shows Articles/RSS saved to New or Later."
+        )
     _article_cache[doc_id] = article
     return article
 
@@ -220,9 +296,9 @@ def _sort_articles(articles: list[dict[str, Any]], sort: str) -> list[dict[str, 
 
 @app.route("/")
 def article_list():
-    location = request.args.get("location", "later")
+    location = request.args.get("location", "all")
     if location not in VALID_LOCATIONS:
-        location = "later"
+        location = "all"
     sort = request.cookies.get(SORT_COOKIE, "newest")
     if sort not in VALID_SORTS:
         sort = "newest"
@@ -365,9 +441,9 @@ def settings():
 
 @app.route("/tags")
 def tag_picker():
-    location = request.args.get("location", "later")
+    location = request.args.get("location", "all")
     if location not in VALID_LOCATIONS:
-        location = "later"
+        location = "all"
     try:
         data = fetch_article_list(location=location, page_cursor=None, tag=None)
     except ReadwiseAPIError as e:
