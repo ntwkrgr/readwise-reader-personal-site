@@ -264,12 +264,67 @@
         body.theme-dark article pre,
         body.theme-dark article th,
         body.theme-dark article td { border-color: #fff; }
-        body.theme-dark .settings-option {
-            border-color: #fff !important;
+        .settings-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .settings-radio {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+        .settings-option {
+            display: inline-flex;
+            align-items: center;
+            min-height: 48px;
+            padding: 0 16px;
+            border: 2px solid #000;
+            border-radius: 8px;
+            background: #fff;
+            color: #000;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .settings-radio:checked + .settings-option {
+            background: #000;
             color: #fff;
         }
-        body.theme-dark .settings-option span { color: #fff; }
-        .settings-option { border-radius: 8px; }
+        body.theme-dark .settings-option {
+            background: #000;
+            color: #fff;
+            border-color: #fff;
+        }
+        body.theme-dark .settings-radio:checked + .settings-option {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+        .tap-overlay {
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: 44px;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+        .tap-overlay-top {
+            top: 0;
+            background: linear-gradient(to bottom, #fff 0%, #fff 60%, rgba(255, 255, 255, 0) 100%);
+        }
+        .tap-overlay-bottom {
+            bottom: 0;
+            background: linear-gradient(to top, #fff 0%, #fff 60%, rgba(255, 255, 255, 0) 100%);
+        }
+        body.theme-dark .tap-overlay-top {
+            background: linear-gradient(to bottom, #000 0%, #000 60%, rgba(0, 0, 0, 0) 100%);
+        }
+        body.theme-dark .tap-overlay-bottom {
+            background: linear-gradient(to top, #000 0%, #000 60%, rgba(0, 0, 0, 0) 100%);
+        }
     </style>
 </head>
 <body class="text-size-{{ text_size }} text-weight-{{ text_weight }} theme-{{ theme }}">
