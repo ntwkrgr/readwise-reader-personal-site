@@ -6,17 +6,13 @@
 <div class="toolbar">
     <a href="/" class="btn">Back to list</a>
     <a href="/settings" class="btn">Settings</a>
-    {% if highlighting_enabled and has_content %}
-    <button type="button" id="save-highlight-btn" class="btn" disabled>Save highlight</button>
-    {% elif has_content %}
+    {% if has_content %}
     <a href="/read/{{ article.id }}/note" class="btn">Add note</a>
     {% endif %}
     <form action="/archive/{{ article.id }}" method="post" style="margin: 0;">
         <button type="submit" class="btn btn-dark">Archive</button>
     </form>
 </div>
-
-<div id="highlight-message" class="flash" style="display: none; margin-bottom: 16px;"></div>
 
 <h1 style="font-size: 24px; margin-bottom: 4px;">{{ article.title }}</h1>
 {% if article.author %}
@@ -39,9 +35,7 @@
 <div class="toolbar" style="margin-top: 24px;">
     <a href="/" class="btn">Back to list</a>
     <a href="/settings" class="btn">Settings</a>
-    {% if highlighting_enabled and has_content %}
-    <button type="button" id="save-highlight-btn-bottom" class="btn" disabled>Save highlight</button>
-    {% elif has_content %}
+    {% if has_content %}
     <a href="/read/{{ article.id }}/note" class="btn">Add note</a>
     {% endif %}
     <form action="/archive/{{ article.id }}" method="post" style="margin: 0;">
@@ -173,65 +167,4 @@
 </script>
 {% endif %}
 
-{% if highlighting_enabled and has_content %}
-<script>
-(function() {
-    var docId = {{ article.id | tojson }};
-    var articleEl = document.getElementById('article-content');
-    var msgEl = document.getElementById('highlight-message');
-    function getSaveButtons() {
-        return [document.getElementById('save-highlight-btn'), document.getElementById('save-highlight-btn-bottom')].filter(Boolean);
-    }
-    function setButtonsEnabled(enabled) {
-        getSaveButtons().forEach(function(btn) { btn.disabled = !enabled; });
-    }
-    function showMessage(text, isError) {
-        msgEl.textContent = text;
-        msgEl.style.display = 'block';
-        msgEl.style.background = isError ? '#533' : '#353';
-        msgEl.style.color = '#fff';
-        setTimeout(function() { msgEl.style.display = 'none'; }, 4000);
-    }
-    function onSelect() {
-        var sel = window.getSelection();
-        var text = (sel && sel.toString ? sel.toString() : '').trim();
-        setButtonsEnabled(text.length > 0);
-    }
-    if (articleEl) {
-        articleEl.addEventListener('mouseup', onSelect);
-        articleEl.addEventListener('touchend', function() { setTimeout(onSelect, 100); });
-    }
-    function doSave() {
-        var sel = window.getSelection();
-        var text = (sel && sel.toString ? sel.toString() : '').trim();
-        if (!text) {
-            showMessage('Select text in the article first.', true);
-            return;
-        }
-        setButtonsEnabled(false);
-        fetch('/save-highlight', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ doc_id: docId, text: text })
-        }).then(function(r) {
-            return r.json().then(function(data) {
-                if (r.ok && data.ok) {
-                    showMessage('Highlight saved to Readwise.', false);
-                    if (window.getSelection) window.getSelection().removeAllRanges();
-                } else {
-                    showMessage(data.error || 'Failed to save.', true);
-                    onSelect();
-                }
-            });
-        }).catch(function() {
-            showMessage('Network error.', true);
-            onSelect();
-        });
-    }
-    getSaveButtons().forEach(function(btn) {
-        btn.addEventListener('click', doSave);
-    });
-})();
-</script>
-{% endif %}
 {% endblock %}

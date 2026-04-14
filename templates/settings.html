@@ -5,7 +5,7 @@
 {% block content %}
 <h1 style="font-size: 22px; margin-bottom: 16px;">Text settings</h1>
 
-<form method="post" action="/settings">
+<form method="post" action="/settings" id="settings-form">
     <div style="margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Theme</p>
         <div class="settings-group">
@@ -47,16 +47,6 @@
         </div>
     </div>
     <div style="margin-bottom: 24px;">
-        <p style="font-weight: bold; margin-bottom: 8px;">Highlighting</p>
-        <p style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, article pages use a small script so you can select text and save highlights to Readwise. Off keeps the site minimal (no JavaScript).</p>
-        <div class="settings-group">
-            <input type="radio" class="settings-radio" id="opt-hl-off" name="highlighting" value="off" {{ 'checked' if not highlighting_enabled else '' }}>
-            <label for="opt-hl-off" class="settings-option">Off</label>
-            <input type="radio" class="settings-radio" id="opt-hl-on" name="highlighting" value="on" {{ 'checked' if highlighting_enabled else '' }}>
-            <label for="opt-hl-on" class="settings-option">On</label>
-        </div>
-    </div>
-    <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Tap to advance page</p>
         <p style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, tap the right side of the article to go forward one screen and the left side to go back. Off keeps normal scrolling (no JavaScript on the reader).</p>
         <div class="settings-group">
@@ -66,10 +56,21 @@
             <label for="opt-tap-on" class="settings-option">On</label>
         </div>
     </div>
-    <button type="submit" class="btn btn-dark">Save</button>
+    <noscript>
+        <button type="submit" class="btn btn-dark">Save</button>
+    </noscript>
 </form>
-
 <p style="margin-top: 20px;">
     <a href="/" class="btn">Back to list</a>
 </p>
+<script>
+(function() {
+    var form = document.getElementById('settings-form');
+    if (!form) return;
+
+    form.addEventListener('change', function() {
+        form.submit();
+    });
+})();
+</script>
 {% endblock %}

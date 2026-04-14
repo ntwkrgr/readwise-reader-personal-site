@@ -6,7 +6,7 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from flask import Flask, flash, jsonify, make_response, redirect, render_template, request, url_for
+from flask import Flask, flash, make_response, redirect, render_template, request, url_for
 
 import requests as http_requests
 
@@ -166,13 +166,11 @@ def sanitize_html(html_content: str) -> str:
 TEXT_SIZE_COOKIE = "readwise_text_size"
 TEXT_WEIGHT_COOKIE = "readwise_text_weight"
 THEME_COOKIE = "readwise_theme"
-HIGHLIGHTING_COOKIE = "readwise_highlighting"
 TAP_ADVANCE_COOKIE = "readwise_tap_advance"
 SORT_COOKIE = "readwise_sort"
 VALID_TEXT_SIZES = {"small", "medium", "large"}
 VALID_TEXT_WEIGHTS = {"normal", "bold"}
 VALID_THEMES = {"light", "dark"}
-VALID_HIGHLIGHTING = {"on", "off"}
 VALID_TAP_ADVANCE = {"on", "off"}
 
 READWISE_V2_HIGHLIGHTS = "https://readwise.io/api/v2/highlights/"
@@ -183,7 +181,6 @@ def inject_display_prefs():
     size = request.cookies.get(TEXT_SIZE_COOKIE, "medium")
     weight = request.cookies.get(TEXT_WEIGHT_COOKIE, "normal")
     theme = request.cookies.get(THEME_COOKIE, "light")
-    highlighting = request.cookies.get(HIGHLIGHTING_COOKIE, "off")
     tap_advance = request.cookies.get(TAP_ADVANCE_COOKIE, "off")
     default_sort = request.cookies.get(SORT_COOKIE, "newest")
     if size not in VALID_TEXT_SIZES:
@@ -192,8 +189,6 @@ def inject_display_prefs():
         weight = "normal"
     if theme not in VALID_THEMES:
         theme = "light"
-    if highlighting not in VALID_HIGHLIGHTING:
-        highlighting = "off"
     if tap_advance not in VALID_TAP_ADVANCE:
         tap_advance = "off"
     if default_sort not in VALID_SORTS:
@@ -202,7 +197,6 @@ def inject_display_prefs():
         "text_size": size,
         "text_weight": weight,
         "theme": theme,
-        "highlighting_enabled": highlighting == "on",
         "tap_advance_enabled": tap_advance == "on",
         "default_sort": default_sort,
     }
@@ -330,26 +324,6 @@ def add_note(doc_id: str):
     return render_template("note.html", article=article)
 
 
-@app.route("/save-highlight", methods=["POST"])
-def save_highlight():
-    if not request.is_json:
-        return jsonify({"error": "JSON required"}), 400
-    data = request.get_json() or {}
-    doc_id = data.get("doc_id")
-    text = (data.get("text") or "").strip()
-    if not doc_id or not text:
-        return jsonify({"error": "doc_id and text required"}), 400
-    try:
-        article = fetch_article(doc_id)
-    except ReadwiseAPIError as e:
-        return jsonify({"error": str(e)}), 502
-    try:
-        save_highlight_to_readwise(article, text, note=data.get("note", ""))
-    except ReadwiseAPIError as e:
-        return jsonify({"error": str(e)}), 502
-    return jsonify({"ok": True})
-
-
 @app.route("/archive/<doc_id>", methods=["POST"])
 def do_archive(doc_id: str):
     try:
@@ -367,7 +341,6 @@ def settings():
         size = request.form.get("text_size", "medium")
         weight = request.form.get("text_weight", "normal")
         theme = request.form.get("theme", "light")
-        highlighting = request.form.get("highlighting", "off")
         tap_advance = request.form.get("tap_advance", "off")
         default_sort = request.form.get("default_sort", "newest")
         if size not in VALID_TEXT_SIZES:
@@ -376,8 +349,6 @@ def settings():
             weight = "normal"
         if theme not in VALID_THEMES:
             theme = "light"
-        if highlighting not in VALID_HIGHLIGHTING:
-            highlighting = "off"
         if tap_advance not in VALID_TAP_ADVANCE:
             tap_advance = "off"
         if default_sort not in VALID_SORTS:
@@ -386,7 +357,6 @@ def settings():
         resp.set_cookie(TEXT_SIZE_COOKIE, size, max_age=31536000)
         resp.set_cookie(TEXT_WEIGHT_COOKIE, weight, max_age=31536000)
         resp.set_cookie(THEME_COOKIE, theme, max_age=31536000)
-        resp.set_cookie(HIGHLIGHTING_COOKIE, highlighting, max_age=31536000)
         resp.set_cookie(TAP_ADVANCE_COOKIE, tap_advance, max_age=31536000)
         resp.set_cookie(SORT_COOKIE, default_sort, max_age=31536000)
         return resp
