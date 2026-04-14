@@ -47,7 +47,6 @@ The **Settings** panel — accessible from the reader view — lets you tune the
 
 - **Text size** — scale up or down from the default for comfortable reading on e-ink.
 - **Font weight** — adjust between light and bold to suit your screen's contrast.
-- **Highlighting** — optionally enable highlight rendering for articles with Readwise highlights.
 - **Dark mode** — invert to a dark background for low-light reading.
 - **Sort order** — sort your article list by date added, or by note activity if you're working through annotated reading.
 
