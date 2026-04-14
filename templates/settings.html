@@ -8,90 +8,62 @@
 <form method="post" action="/settings">
     <div style="margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Theme</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="theme" value="light" {{ 'checked' if theme == 'light' else '' }}>
-                <span style="margin-left: 8px;">Light</span>
-            </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="theme" value="dark" {{ 'checked' if theme == 'dark' else '' }}>
-                <span style="margin-left: 8px;">Dark</span>
-            </label>
+        <div class="settings-group">
+            <input type="radio" class="settings-radio" id="opt-theme-light" name="theme" value="light" {{ 'checked' if theme == 'light' else '' }}>
+            <label for="opt-theme-light" class="settings-option">Light</label>
+            <input type="radio" class="settings-radio" id="opt-theme-dark" name="theme" value="dark" {{ 'checked' if theme == 'dark' else '' }}>
+            <label for="opt-theme-dark" class="settings-option">Dark</label>
         </div>
     </div>
     <div style="margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Size</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="text_size" value="small" {{ 'checked' if text_size == 'small' else '' }}>
-                <span style="margin-left: 8px;">Small</span>
-            </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="text_size" value="medium" {{ 'checked' if text_size == 'medium' else '' }}>
-                <span style="margin-left: 8px;">Medium</span>
-            </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="text_size" value="large" {{ 'checked' if text_size == 'large' else '' }}>
-                <span style="margin-left: 8px;">Large</span>
-            </label>
+        <div class="settings-group">
+            <input type="radio" class="settings-radio" id="opt-size-small" name="text_size" value="small" {{ 'checked' if text_size == 'small' else '' }}>
+            <label for="opt-size-small" class="settings-option">Small</label>
+            <input type="radio" class="settings-radio" id="opt-size-medium" name="text_size" value="medium" {{ 'checked' if text_size == 'medium' else '' }}>
+            <label for="opt-size-medium" class="settings-option">Medium</label>
+            <input type="radio" class="settings-radio" id="opt-size-large" name="text_size" value="large" {{ 'checked' if text_size == 'large' else '' }}>
+            <label for="opt-size-large" class="settings-option">Large</label>
         </div>
     </div>
     <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Weight</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="text_weight" value="normal" {{ 'checked' if text_weight == 'normal' else '' }}>
-                <span style="margin-left: 8px;">Normal</span>
-            </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="text_weight" value="bold" {{ 'checked' if text_weight == 'bold' else '' }}>
-                <span style="margin-left: 8px;">Bold</span>
-            </label>
+        <div class="settings-group">
+            <input type="radio" class="settings-radio" id="opt-weight-normal" name="text_weight" value="normal" {{ 'checked' if text_weight == 'normal' else '' }}>
+            <label for="opt-weight-normal" class="settings-option">Normal</label>
+            <input type="radio" class="settings-radio" id="opt-weight-bold" name="text_weight" value="bold" {{ 'checked' if text_weight == 'bold' else '' }}>
+            <label for="opt-weight-bold" class="settings-option">Bold</label>
         </div>
     </div>
     <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Default sort</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="default_sort" value="newest" {{ 'checked' if default_sort == 'newest' else '' }}>
-                <span style="margin-left: 8px;">Newest</span>
-            </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="default_sort" value="oldest" {{ 'checked' if default_sort == 'oldest' else '' }}>
-                <span style="margin-left: 8px;">Oldest</span>
-            </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="default_sort" value="random" {{ 'checked' if default_sort == 'random' else '' }}>
-                <span style="margin-left: 8px;">Random</span>
-            </label>
+        <div class="settings-group">
+            <input type="radio" class="settings-radio" id="opt-sort-newest" name="default_sort" value="newest" {{ 'checked' if default_sort == 'newest' else '' }}>
+            <label for="opt-sort-newest" class="settings-option">Newest</label>
+            <input type="radio" class="settings-radio" id="opt-sort-oldest" name="default_sort" value="oldest" {{ 'checked' if default_sort == 'oldest' else '' }}>
+            <label for="opt-sort-oldest" class="settings-option">Oldest</label>
+            <input type="radio" class="settings-radio" id="opt-sort-random" name="default_sort" value="random" {{ 'checked' if default_sort == 'random' else '' }}>
+            <label for="opt-sort-random" class="settings-option">Random</label>
         </div>
     </div>
     <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Highlighting</p>
         <p style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, article pages use a small script so you can select text and save highlights to Readwise. Off keeps the site minimal (no JavaScript).</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="highlighting" value="off" {{ 'checked' if not highlighting_enabled else '' }}>
-                <span style="margin-left: 8px;">Off</span>
-            </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="highlighting" value="on" {{ 'checked' if highlighting_enabled else '' }}>
-                <span style="margin-left: 8px;">On</span>
-            </label>
+        <div class="settings-group">
+            <input type="radio" class="settings-radio" id="opt-hl-off" name="highlighting" value="off" {{ 'checked' if not highlighting_enabled else '' }}>
+            <label for="opt-hl-off" class="settings-option">Off</label>
+            <input type="radio" class="settings-radio" id="opt-hl-on" name="highlighting" value="on" {{ 'checked' if highlighting_enabled else '' }}>
+            <label for="opt-hl-on" class="settings-option">On</label>
         </div>
     </div>
     <div style="margin-bottom: 24px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Tap to advance page</p>
-        <p style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, tapping the article body advances one screen instead of requiring you to scroll. Off keeps normal scrolling (no JavaScript on the reader).</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="tap_advance" value="off" {{ 'checked' if not tap_advance_enabled else '' }}>
-                <span style="margin-left: 8px;">Off</span>
-            </label>
-            <label class="settings-option" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 2px solid #000; cursor: pointer;">
-                <input type="radio" name="tap_advance" value="on" {{ 'checked' if tap_advance_enabled else '' }}>
-                <span style="margin-left: 8px;">On</span>
-            </label>
+        <p style="font-size: 14px; color: #333; margin-bottom: 8px;">When on, tap the right side of the article to go forward one screen and the left side to go back. Off keeps normal scrolling (no JavaScript on the reader).</p>
+        <div class="settings-group">
+            <input type="radio" class="settings-radio" id="opt-tap-off" name="tap_advance" value="off" {{ 'checked' if not tap_advance_enabled else '' }}>
+            <label for="opt-tap-off" class="settings-option">Off</label>
+            <input type="radio" class="settings-radio" id="opt-tap-on" name="tap_advance" value="on" {{ 'checked' if tap_advance_enabled else '' }}>
+            <label for="opt-tap-on" class="settings-option">On</label>
         </div>
     </div>
     <button type="submit" class="btn btn-dark">Save</button>
