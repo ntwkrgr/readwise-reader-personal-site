@@ -43,6 +43,22 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 - **Archive** an article from the reader view with the **Archive** button. Archived items are intentionally excluded from list and reader access.
 - **Refresh** the list manually if you've added new articles from another device.
 
+## API Usage
+
+The app caches all Readwise responses to disk so the cache survives container restarts and reboots. A cold cache makes at most **2 API calls** to load the All list view (one per location). Individual article fetches are also cached. Cached responses are reused for 20 minutes (list) or 60 minutes (articles).
+
+On startup, each worker pre-warms the cache in the background. A distributed lock (backed by the same disk cache) ensures that concurrent workers never duplicate API calls for the same resource — at most one request fires per cache key even under load.
+
+The Refresh button has a 2-minute cooldown. Hitting it within that window shows a brief notice and serves the existing cached list.
+
+If a 429 is returned despite all this, the app waits and retries once before surfacing an error.
+
+| Setting | Default | Override via |
+|---------|---------|-------------|
+| Cache directory | `<app_dir>/.cache` | `CACHE_DIR` env var |
+| List cache TTL | 20 min | `LIST_CACHE_TTL` env var (seconds) |
+| Article cache TTL | 60 min | `ARTICLE_CACHE_TTL` env var (seconds) |
+
 ## Reader Settings
 
 The **Settings** panel — accessible from the reader view — lets you tune the reading experience for your display and preference:

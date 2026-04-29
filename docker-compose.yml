@@ -6,3 +6,8 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+    volumes:
+      - cache:/app/.cache
+
+volumes:
+  cache:
