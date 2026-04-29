@@ -9,7 +9,7 @@
         <a href="/?location=later{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'later' else '' }}">Later</a>
         <a href="/?location=new{% if current_tag %}&tag={{ current_tag }}{% endif %}" class="{{ 'active' if current_location == 'new' else '' }}">New</a>
         <a href="/tags?location={{ current_location }}">Tags</a>
-        <a href="/?location={{ current_location }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&refresh=1">Refresh</a>
+        <a href="/?location={{ current_location }}{% if current_tag %}&tag={{ current_tag }}{% endif %}&refresh=1">Refresh{% if cache_age_seconds is not none %} ({% if cache_age_seconds < 60 %}just now{% else %}{{ cache_age_seconds // 60 }}m ago{% endif %}){% endif %}</a>
     </div>
     <a href="/settings" class="nav-settings">Settings</a>
 </nav>

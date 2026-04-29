@@ -1,9 +1,12 @@
 import os
+import time
 import uuid
 import random
+import threading
 
 from typing import Any
 
+import diskcache
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, flash, make_response, redirect, render_template, request, url_for
@@ -22,20 +25,68 @@ ARTICLES_PER_PAGE = 20
 VALID_LOCATIONS = {"all", "later", "new"}
 VALID_SORTS = {"newest", "oldest", "random"}
 
-# --- Cache ---
+_APP_DIR = os.path.abspath(os.path.dirname(__file__))
+CACHE_DIR = os.environ.get("CACHE_DIR", os.path.join(_APP_DIR, ".cache"))
+LIST_CACHE_TTL = int(os.environ.get("LIST_CACHE_TTL", 1200))   # 20 minutes
+ARTICLE_CACHE_TTL = int(os.environ.get("ARTICLE_CACHE_TTL", 3600))  # 60 minutes
+REFRESH_COOLDOWN = 120  # 2 minutes
 
-_list_cache: dict[tuple[str, str | None, str | None], dict[str, Any]] = {}
-_article_cache: dict[str, dict[str, Any]] = {}
-_all_count_cache: dict[str | None, int] = {}
+_MISSING = object()
+_cache = diskcache.Cache(CACHE_DIR)
+
+
+# --- Cache helpers ---
+
+def _list_version() -> int:
+    return _cache.get("list_version", default=0)
+
+
+def _list_key(location: str, page_cursor: str | None, tag: str | None) -> str:
+    return f"list:v{_list_version()}:{location}:{page_cursor or ''}:{tag or ''}"
+
+
+def _article_key(doc_id: str) -> str:
+    return f"article:{doc_id}"
+
+
+def _cached_fetch(key: str, fetch_fn, ttl: int) -> Any:
+    """Double-checked lock: check → lock → check → fetch → store.
+
+    expire=30 on the Lock auto-releases it if the holder dies mid-operation,
+    preventing permanent deadlocks across gunicorn workers.
+    """
+    result = _cache.get(key, default=_MISSING)
+    if result is not _MISSING:
+        return result
+    with diskcache.Lock(_cache, f"lock:{key}", expire=30):
+        result = _cache.get(key, default=_MISSING)
+        if result is not _MISSING:
+            return result
+        result = fetch_fn()
+        _cache.set(key, result, expire=ttl)
+        return result
 
 
 def invalidate_list_cache() -> None:
-    _list_cache.clear()
-    _all_count_cache.clear()
+    _cache.incr("list_version", default=0)
 
 
 def invalidate_article_cache(doc_id: str) -> None:
-    _article_cache.pop(doc_id, None)
+    _cache.delete(_article_key(doc_id))
+
+
+def _can_refresh() -> bool:
+    last = _cache.get("last_refresh")
+    return last is None or (time.time() - last) >= REFRESH_COOLDOWN
+
+
+def _mark_refresh() -> None:
+    _cache.set("last_refresh", time.time())
+
+
+def cache_age_seconds() -> int | None:
+    last = _cache.get("last_refresh")
+    return int(time.time() - last) if last is not None else None
 
 
 # --- Readwise API helpers ---
@@ -69,44 +120,20 @@ def _handle_api_response(resp: http_requests.Response) -> dict[str, Any]:
     return resp.json()
 
 
-def fetch_article_list(
-    location: str = "later",
-    page_cursor: str | None = None,
-    tag: str | None = None,
-) -> dict[str, Any]:
-    if location == "all":
-        return fetch_all_active_articles(page_cursor=page_cursor, tag=tag)
-
-    cache_key = (location, page_cursor, tag)
-    if cache_key in _list_cache:
-        return _list_cache[cache_key]
-
-    params: dict[str, str | int] = {"location": location, "limit": ARTICLES_PER_PAGE}
-    if page_cursor:
-        params["pageCursor"] = page_cursor
-    if tag:
-        params["tag"] = tag
-
-    try:
-        resp = http_requests.get(
-            f"{READWISE_API_BASE}/list/",
-            headers=_api_headers(),
-            params=params,
-            timeout=15,
-        )
-    except http_requests.RequestException:
-        raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
-
-    data = _handle_api_response(resp)
-
-    results = [_ for _ in data.get("results", []) if _is_included_new_or_later_item(_)]
-    result = {
-        "results": results,
-        "nextPageCursor": data.get("nextPageCursor"),
-        "count": data.get("count", 0),
-    }
-    _list_cache[cache_key] = result
-    return result
+def _api_get(url: str, params: dict | None = None) -> dict[str, Any]:
+    """GET with a single transparent retry on 429."""
+    for attempt in range(2):
+        try:
+            resp = http_requests.get(url, headers=_api_headers(), params=params, timeout=15)
+        except http_requests.RequestException:
+            raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
+        if resp.status_code == 429 and attempt == 0:
+            retry_after = resp.headers.get("Retry-After")
+            wait = min(int(retry_after) if retry_after else 5, 15)
+            time.sleep(wait)
+            continue
+        return _handle_api_response(resp)
+    raise ReadwiseAPIError("Too many requests — wait a moment and tap to retry.")
 
 
 def _is_included_new_or_later_item(item: dict[str, Any]) -> bool:
@@ -117,96 +144,80 @@ def _is_included_new_or_later_item(item: dict[str, Any]) -> bool:
     )
 
 
-def _fetch_location_count(location: str, category: str | None, tag: str | None) -> int:
-    params: dict[str, str | int] = {"location": location, "limit": 1}
-    if category:
-        params["category"] = category
+def _fetch_article_list_from_api(
+    location: str, page_cursor: str | None, tag: str | None
+) -> dict[str, Any]:
+    params: dict[str, str | int] = {"location": location, "limit": ARTICLES_PER_PAGE}
+    if page_cursor:
+        params["pageCursor"] = page_cursor
     if tag:
         params["tag"] = tag
-    try:
-        resp = http_requests.get(
-            f"{READWISE_API_BASE}/list/",
-            headers=_api_headers(),
-            params=params,
-            timeout=15,
-        )
-    except http_requests.RequestException:
-        raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
-    data = _handle_api_response(resp)
-    return int(data.get("count", 0) or 0)
+    data = _api_get(f"{READWISE_API_BASE}/list/", params=params)
+    results = [item for item in data.get("results", []) if _is_included_new_or_later_item(item)]
+    return {
+        "results": results,
+        "nextPageCursor": data.get("nextPageCursor"),
+        "count": data.get("count", 0),
+    }
 
 
-def _count_all_included_items(tag: str | None) -> int:
-    if tag in _all_count_cache:
-        return _all_count_cache[tag]
-    total = 0
+def fetch_article_list(
+    location: str = "later",
+    page_cursor: str | None = None,
+    tag: str | None = None,
+) -> dict[str, Any]:
+    if location == "all":
+        return fetch_all_active_articles(page_cursor=page_cursor, tag=tag)
+    key = _list_key(location, page_cursor, tag)
+    return _cached_fetch(
+        key, lambda: _fetch_article_list_from_api(location, page_cursor, tag), LIST_CACHE_TTL
+    )
+
+
+def _fetch_all_active_articles_from_api(
+    page_cursor: str | None, tag: str | None
+) -> dict[str, Any]:
+    all_articles: dict[str, dict[str, Any]] = {}
+    total_count = 0
     for location in ("later", "new"):
-        total += _fetch_location_count(location=location, category="article", tag=tag)
-        total += _fetch_location_count(location=location, category="rss", tag=tag)
-    _all_count_cache[tag] = max(total, 0)
-    return _all_count_cache[tag]
+        batch = fetch_article_list(location=location, page_cursor=None, tag=tag)
+        for article in batch["results"]:
+            article_id = str(article.get("id", ""))
+            if article_id:
+                all_articles.setdefault(article_id, article)
+        total_count += batch.get("count", 0)
+    collected = list(all_articles.values())
+    return {
+        "results": collected[:ARTICLES_PER_PAGE],
+        "nextPageCursor": None,
+        "count": total_count,
+    }
 
 
 def fetch_all_active_articles(
     page_cursor: str | None = None, tag: str | None = None
 ) -> dict[str, Any]:
-    """
-    Pull article/RSS records from Later + New only.
-    """
-    cache_key = ("all", page_cursor, tag)
-    if cache_key in _list_cache:
-        return _list_cache[cache_key]
-
-    all_articles: dict[str, dict[str, Any]] = {}
-    for location in ("later", "new"):
-        cursor: str | None = None
-        while True:
-            batch = fetch_article_list(location=location, page_cursor=cursor, tag=tag)
-            for article in batch["results"]:
-                article_id = str(article.get("id", ""))
-                if article_id:
-                    all_articles.setdefault(article_id, article)
-            cursor = batch.get("nextPageCursor")
-            if not cursor:
-                break
-
-    collected = list(all_articles.values())
-    result = {
-        "results": collected[:ARTICLES_PER_PAGE],
-        "nextPageCursor": None,
-        "count": _count_all_included_items(tag=tag),
-    }
-    _list_cache[cache_key] = result
-    return result
+    key = _list_key("all", page_cursor, tag)
+    return _cached_fetch(
+        key, lambda: _fetch_all_active_articles_from_api(page_cursor, tag), LIST_CACHE_TTL
+    )
 
 
-def fetch_article(doc_id: str) -> dict[str, Any]:
-    if doc_id in _article_cache:
-        return _article_cache[doc_id]
-
+def _fetch_article_from_api(doc_id: str) -> dict[str, Any]:
     params: dict[str, str] = {"id": doc_id, "withHtmlContent": "true"}
-    try:
-        resp = http_requests.get(
-            f"{READWISE_API_BASE}/list/",
-            headers=_api_headers(),
-            params=params,
-            timeout=15,
-        )
-    except http_requests.RequestException:
-        raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
-
-    data = _handle_api_response(resp)
+    data = _api_get(f"{READWISE_API_BASE}/list/", params=params)
     results = data.get("results", [])
     if not results:
         raise ReadwiseAPIError("Article not found.")
-
     article = results[0]
     if not _is_included_new_or_later_item(article):
-        raise ReadwiseAPIError(
-            "This reader only shows Articles/RSS saved to New or Later."
-        )
-    _article_cache[doc_id] = article
+        raise ReadwiseAPIError("This reader only shows Articles/RSS saved to New or Later.")
     return article
+
+
+def fetch_article(doc_id: str) -> dict[str, Any]:
+    key = _article_key(doc_id)
+    return _cached_fetch(key, lambda: _fetch_article_from_api(doc_id), ARTICLE_CACHE_TTL)
 
 
 def archive_article(doc_id: str) -> None:
@@ -219,7 +230,6 @@ def archive_article(doc_id: str) -> None:
         )
     except http_requests.RequestException:
         raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
-
     _handle_api_response(resp)
     invalidate_list_cache()
     invalidate_article_cache(doc_id)
@@ -285,7 +295,6 @@ def _sort_articles(articles: list[dict[str, Any]], sort: str) -> list[dict[str, 
         return out
 
     def sort_key(a: dict[str, Any]) -> str:
-        # Use saved_at (date added) with created_at fallback
         return a.get("saved_at") or a.get("created_at") or ""
 
     return sorted(articles, key=sort_key, reverse=(sort == "newest"))
@@ -307,7 +316,11 @@ def article_list():
     tag = request.args.get("tag")
 
     if refresh:
-        invalidate_list_cache()
+        if _can_refresh():
+            invalidate_list_cache()
+            _mark_refresh()
+        else:
+            flash("List was refreshed recently — try again in a moment.")
 
     try:
         data = fetch_article_list(location=location, page_cursor=page_cursor, tag=tag)
@@ -324,6 +337,7 @@ def article_list():
         current_tag=tag,
         current_sort=sort,
         count=data["count"],
+        cache_age_seconds=cache_age_seconds(),
     )
 
 
@@ -386,17 +400,23 @@ def add_note(doc_id: str):
         try:
             article = fetch_article(doc_id)
         except ReadwiseAPIError as e:
-            return render_template("error.html", message=str(e), retry_url=url_for("read_article", doc_id=doc_id))
+            return render_template(
+                "error.html", message=str(e), retry_url=url_for("read_article", doc_id=doc_id)
+            )
         try:
             save_highlight_to_readwise(article, text)
         except ReadwiseAPIError as e:
-            return render_template("error.html", message=str(e), retry_url=url_for("add_note", doc_id=doc_id))
+            return render_template(
+                "error.html", message=str(e), retry_url=url_for("add_note", doc_id=doc_id)
+            )
         flash("Note saved to Readwise.")
         return redirect(url_for("read_article", doc_id=doc_id))
     try:
         article = fetch_article(doc_id)
     except ReadwiseAPIError as e:
-        return render_template("error.html", message=str(e), retry_url=url_for("article_list"))
+        return render_template(
+            "error.html", message=str(e), retry_url=url_for("article_list")
+        )
     return render_template("note.html", article=article)
 
 
@@ -460,6 +480,22 @@ def tag_picker():
         tags=sorted(tag_names),
         current_location=location,
     )
+
+
+# --- Startup pre-warm (Phase 3) ---
+# Runs in each gunicorn worker after fork. With the diskcache lock, only one
+# worker actually hits the API; the others wait and read from cache.
+
+def _prewarm_cache() -> None:
+    time.sleep(2)  # Let gunicorn finish worker initialization
+    try:
+        fetch_article_list(location="later")
+        fetch_article_list(location="new")
+    except Exception:
+        pass  # Best-effort; real errors will surface on first user request
+
+
+threading.Thread(target=_prewarm_cache, daemon=True).start()
 
 
 if __name__ == "__main__":
