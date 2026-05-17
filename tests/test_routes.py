@@ -46,10 +46,11 @@ def client(tmp_path):
 
 # --- Article list ---
 
-def test_dashboard_redirects_to_reader(client):
+def test_dashboard_renders_feature_links(client):
     resp = client.get("/")
-    assert resp.status_code == 302
-    assert "/reader/" in resp.headers["Location"]
+    assert resp.status_code == 200
+    assert b"Reader" in resp.data
+    assert b"Highlights" in resp.data
 
 
 def test_list_renders_articles(client):

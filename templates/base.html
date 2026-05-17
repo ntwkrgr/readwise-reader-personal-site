@@ -341,6 +341,11 @@
     {% endfor %}
     {% endif %}
     {% endwith %}
+    {% block nav %}
+    <nav class="nav">
+        <a href="{{ url_for('dashboard_bp.index') }}" class="btn">Home</a>
+    </nav>
+    {% endblock %}
     {% block content %}{% endblock %}
 </body>
 </html>

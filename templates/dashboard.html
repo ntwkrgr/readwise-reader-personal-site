@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block nav %}
+<style>
+    .dashboard-title {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        font-size: 28px;
+        line-height: 1.2;
+        font-weight: 700;
+        margin: 0 0 20px 0;
+        color: #000;
+    }
+    .dashboard-menu {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        margin: 0;
+    }
+    .dashboard-link {
+        display: block;
+        min-height: 48px;
+        padding: 18px 16px;
+        margin: 0 0 14px 0;
+        border: 2px solid #000;
+        border-radius: 8px;
+        color: #000;
+        background: #fff;
+        text-decoration: none;
+        font-size: 24px;
+        line-height: 1.25;
+        font-weight: 700;
+    }
+    .theme-dark .dashboard-title {
+        color: #fff;
+    }
+    .theme-dark .dashboard-link {
+        color: #fff;
+        background: #000;
+        border-color: #fff;
+    }
+</style>
+<h1 class="dashboard-title">Home</h1>
+{% endblock %}
+
+{% block content %}
+<main class="dashboard-menu">
+    <a class="dashboard-link" href="/reader/">Reader</a>
+    <a class="dashboard-link" href="/highlights/">Highlights</a>
+    <a class="dashboard-link" href="/bible/">Bible</a>
+    <a class="dashboard-link" href="{{ url_for('settings_bp.settings') }}">Settings</a>
+</main>
+{% endblock %}
