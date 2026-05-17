@@ -30,11 +30,13 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         app.config.update(test_config)
 
     from app.dashboard import dashboard_bp
+    from app.bible import bible_bp
     from app.highlights import highlights_bp
     from app.reader import reader_bp
     from app.settings import settings_bp
 
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(bible_bp)
     app.register_blueprint(highlights_bp)
     app.register_blueprint(reader_bp)
     app.register_blueprint(settings_bp)

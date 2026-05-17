@@ -1,0 +1,116 @@
+{
+  "books": [
+    {
+      "id": "GEN",
+      "name": "Genesis",
+      "chapters": [
+        {
+          "number": 1,
+          "verses": [
+            {"number": 1, "text": "In the beginning, God created the heavens and the earth."},
+            {"number": 2, "text": "The earth was formless and empty. Darkness was on the surface of the deep and God's Spirit was hovering over the surface of the waters."},
+            {"number": 3, "text": "God said, \"Let there be light,\" and there was light."},
+            {"number": 4, "text": "God saw the light, and saw that it was good. God divided the light from the darkness."},
+            {"number": 5, "text": "God called the light Day, and the darkness he called Night. There was evening and there was morning, the first day."}
+          ]
+        }
+      ]
+    },
+    {"id": "EXO", "name": "Exodus", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Exodus."}]}]},
+    {"id": "LEV", "name": "Leviticus", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Leviticus."}]}]},
+    {"id": "NUM", "name": "Numbers", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Numbers."}]}]},
+    {"id": "DEU", "name": "Deuteronomy", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Deuteronomy."}]}]},
+    {"id": "JOS", "name": "Joshua", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Joshua."}]}]},
+    {"id": "JDG", "name": "Judges", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Judges."}]}]},
+    {"id": "RUT", "name": "Ruth", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Ruth."}]}]},
+    {"id": "1SA", "name": "1 Samuel", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 1 Samuel."}]}]},
+    {"id": "2SA", "name": "2 Samuel", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 2 Samuel."}]}]},
+    {"id": "1KI", "name": "1 Kings", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 1 Kings."}]}]},
+    {"id": "2KI", "name": "2 Kings", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 2 Kings."}]}]},
+    {"id": "1CH", "name": "1 Chronicles", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 1 Chronicles."}]}]},
+    {"id": "2CH", "name": "2 Chronicles", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 2 Chronicles."}]}]},
+    {"id": "EZR", "name": "Ezra", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Ezra."}]}]},
+    {"id": "NEH", "name": "Nehemiah", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Nehemiah."}]}]},
+    {"id": "EST", "name": "Esther", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Esther."}]}]},
+    {"id": "JOB", "name": "Job", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Job."}]}]},
+    {"id": "PSA", "name": "Psalms", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Psalms."}]}]},
+    {"id": "PRO", "name": "Proverbs", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Proverbs."}]}]},
+    {"id": "ECC", "name": "Ecclesiastes", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Ecclesiastes."}]}]},
+    {"id": "SNG", "name": "Song of Solomon", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Song of Solomon."}]}]},
+    {"id": "ISA", "name": "Isaiah", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Isaiah."}]}]},
+    {"id": "JER", "name": "Jeremiah", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Jeremiah."}]}]},
+    {"id": "LAM", "name": "Lamentations", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Lamentations."}]}]},
+    {"id": "EZK", "name": "Ezekiel", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Ezekiel."}]}]},
+    {"id": "DAN", "name": "Daniel", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Daniel."}]}]},
+    {"id": "HOS", "name": "Hosea", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Hosea."}]}]},
+    {"id": "JOL", "name": "Joel", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Joel."}]}]},
+    {"id": "AMO", "name": "Amos", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Amos."}]}]},
+    {"id": "OBA", "name": "Obadiah", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Obadiah."}]}]},
+    {"id": "JON", "name": "Jonah", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Jonah."}]}]},
+    {"id": "MIC", "name": "Micah", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Micah."}]}]},
+    {"id": "NAH", "name": "Nahum", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Nahum."}]}]},
+    {"id": "HAB", "name": "Habakkuk", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Habakkuk."}]}]},
+    {"id": "ZEP", "name": "Zephaniah", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Zephaniah."}]}]},
+    {"id": "HAG", "name": "Haggai", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Haggai."}]}]},
+    {"id": "ZEC", "name": "Zechariah", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Zechariah."}]}]},
+    {"id": "MAL", "name": "Malachi", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Malachi."}]}]},
+    {"id": "MAT", "name": "Matthew", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Matthew."}]}]},
+    {"id": "MRK", "name": "Mark", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Mark."}]}]},
+    {"id": "LUK", "name": "Luke", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Luke."}]}]},
+    {
+      "id": "JHN",
+      "name": "John",
+      "chapters": [
+        {"number": 1, "verses": [{"number": 1, "text": "Stub verse for John 1."}]},
+        {"number": 2, "verses": [{"number": 1, "text": "Stub verse for John 2."}]},
+        {
+          "number": 3,
+          "verses": [
+            {"number": 1, "text": "Now there was a man of the Pharisees named Nicodemus, a ruler of the Jews."},
+            {"number": 2, "text": "The same came to him by night, and said to him, \"Rabbi, we know that you are a teacher come from God, for no one can do these signs that you do unless God is with him.\""},
+            {"number": 3, "text": "Jesus answered him, \"Most certainly, I tell you, unless one is born anew, he can't see God's Kingdom.\""},
+            {"number": 4, "text": "Nicodemus said to him, \"How can a man be born when he is old? Can he enter a second time into his mother's womb, and be born?\""},
+            {"number": 5, "text": "Jesus answered, \"Most certainly I tell you, unless one is born of water and spirit, he can't enter into God's Kingdom.\""},
+            {"number": 16, "text": "For God so loved the world, that he gave his only born Son, that whoever believes in him should not perish, but have eternal life."}
+          ]
+        }
+      ]
+    },
+    {"id": "ACT", "name": "Acts", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Acts."}]}]},
+    {"id": "ROM", "name": "Romans", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Romans."}]}]},
+    {"id": "1CO", "name": "1 Corinthians", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 1 Corinthians."}]}]},
+    {"id": "2CO", "name": "2 Corinthians", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 2 Corinthians."}]}]},
+    {"id": "GAL", "name": "Galatians", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Galatians."}]}]},
+    {"id": "EPH", "name": "Ephesians", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Ephesians."}]}]},
+    {"id": "PHP", "name": "Philippians", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Philippians."}]}]},
+    {"id": "COL", "name": "Colossians", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Colossians."}]}]},
+    {"id": "1TH", "name": "1 Thessalonians", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 1 Thessalonians."}]}]},
+    {"id": "2TH", "name": "2 Thessalonians", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 2 Thessalonians."}]}]},
+    {"id": "1TI", "name": "1 Timothy", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 1 Timothy."}]}]},
+    {"id": "2TI", "name": "2 Timothy", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 2 Timothy."}]}]},
+    {"id": "TIT", "name": "Titus", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Titus."}]}]},
+    {"id": "PHM", "name": "Philemon", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Philemon."}]}]},
+    {"id": "HEB", "name": "Hebrews", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Hebrews."}]}]},
+    {"id": "JAS", "name": "James", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for James."}]}]},
+    {"id": "1PE", "name": "1 Peter", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 1 Peter."}]}]},
+    {"id": "2PE", "name": "2 Peter", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 2 Peter."}]}]},
+    {"id": "1JN", "name": "1 John", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 1 John."}]}]},
+    {"id": "2JN", "name": "2 John", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 2 John."}]}]},
+    {"id": "3JN", "name": "3 John", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for 3 John."}]}]},
+    {"id": "JUD", "name": "Jude", "chapters": [{"number": 1, "verses": [{"number": 1, "text": "Stub verse for Jude."}]}]},
+    {
+      "id": "REV",
+      "name": "Revelation",
+      "chapters": [
+        {
+          "number": 1,
+          "verses": [
+            {"number": 1, "text": "This is the Revelation of Jesus Christ, which God gave him to show to his servants the things which must happen soon, which he sent and made known by his angel to his servant, John,"},
+            {"number": 2, "text": "who testified to God's word and of the testimony of Jesus Christ, about everything that he saw."},
+            {"number": 3, "text": "Blessed is he who reads and those who hear the words of the prophecy, and keep the things that are written in it, for the time is near."}
+          ]
+        }
+      ]
+    }
+  ]
+}
