@@ -6,17 +6,17 @@ from app.cache import (
     ARTICLE_CACHE_TTL,
     LIST_CACHE_TTL,
     _article_key,
-    _cached_fetch,
     _list_key,
+    cached_fetch,
     invalidate_article_cache,
     invalidate_list_cache,
 )
 from app.shared import (
     READWISE_API_BASE,
     ReadwiseAPIError,
-    _api_get,
-    _api_headers,
-    _handle_api_response,
+    api_get,
+    api_headers,
+    handle_api_response,
 )
 
 ARTICLES_PER_PAGE = 20
@@ -39,7 +39,7 @@ def _fetch_article_list_from_api(
         params["pageCursor"] = page_cursor
     if tag:
         params["tag"] = tag
-    data = _api_get(f"{READWISE_API_BASE}/list/", params=params)
+    data = api_get(f"{READWISE_API_BASE}/list/", params=params)
     results = [item for item in data.get("results", []) if _is_included_new_or_later_item(item)]
     return {
         "results": results,
@@ -56,7 +56,7 @@ def fetch_article_list(
     if location == "all":
         return fetch_all_active_articles(page_cursor=page_cursor, tag=tag)
     key = _list_key(location, page_cursor, tag)
-    return _cached_fetch(
+    return cached_fetch(
         key, lambda: _fetch_article_list_from_api(location, page_cursor, tag), LIST_CACHE_TTL
     )
 
@@ -85,14 +85,14 @@ def fetch_all_active_articles(
     page_cursor: str | None = None, tag: str | None = None
 ) -> dict[str, Any]:
     key = _list_key("all", page_cursor, tag)
-    return _cached_fetch(
+    return cached_fetch(
         key, lambda: _fetch_all_active_articles_from_api(page_cursor, tag), LIST_CACHE_TTL
     )
 
 
 def _fetch_article_from_api(doc_id: str) -> dict[str, Any]:
     params: dict[str, str] = {"id": doc_id, "withHtmlContent": "true"}
-    data = _api_get(f"{READWISE_API_BASE}/list/", params=params)
+    data = api_get(f"{READWISE_API_BASE}/list/", params=params)
     results = data.get("results", [])
     if not results:
         raise ReadwiseAPIError("Article not found.")
@@ -104,20 +104,20 @@ def _fetch_article_from_api(doc_id: str) -> dict[str, Any]:
 
 def fetch_article(doc_id: str) -> dict[str, Any]:
     key = _article_key(doc_id)
-    return _cached_fetch(key, lambda: _fetch_article_from_api(doc_id), ARTICLE_CACHE_TTL)
+    return cached_fetch(key, lambda: _fetch_article_from_api(doc_id), ARTICLE_CACHE_TTL)
 
 
 def archive_article(doc_id: str) -> None:
     try:
         resp = http_requests.patch(
             f"{READWISE_API_BASE}/update/{doc_id}",
-            headers=_api_headers(),
+            headers=api_headers(),
             json={"location": "archive"},
             timeout=15,
         )
     except http_requests.RequestException:
         raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
-    _handle_api_response(resp)
+    handle_api_response(resp)
     invalidate_list_cache()
     invalidate_article_cache(doc_id)
 
@@ -139,13 +139,10 @@ def save_highlight_to_readwise(article: dict[str, Any], text: str, note: str = "
     try:
         resp = http_requests.post(
             READWISE_V2_HIGHLIGHTS,
-            headers=_api_headers(),
+            headers=api_headers(),
             json=payload,
             timeout=15,
         )
     except http_requests.RequestException:
         raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
-    if resp.status_code == 401:
-        raise ReadwiseAPIError("Invalid API token — check your .env file.")
-    if resp.status_code >= 400:
-        raise ReadwiseAPIError(f"Readwise returned an error (HTTP {resp.status_code}).")
+    handle_api_response(resp)

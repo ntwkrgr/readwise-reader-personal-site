@@ -6,10 +6,10 @@
 <h1 style="font-size: 22px; margin-bottom: 16px;">Filter by tag</h1>
 <p style="margin-bottom: 16px;">Choose a tag to filter articles in {{ current_location }}.</p>
 
-<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
-    <a href="{{ url_for('reader_bp.article_list', location=current_location) }}" class="btn">Show all</a>
+<div style="display: flex; flex-wrap: wrap; margin-bottom: 20px;">
+    <a href="{{ url_for('reader_bp.article_list', location=current_location) }}" class="btn" style="margin-right: 8px; margin-bottom: 8px;">Show all</a>
     {% for tag in tags %}
-    <a href="{{ url_for('reader_bp.article_list', location=current_location, tag=tag) }}" class="btn">{{ tag }}</a>
+    <a href="{{ url_for('reader_bp.article_list', location=current_location, tag=tag) }}" class="btn" style="margin-right: 8px; margin-bottom: 8px;">{{ tag }}</a>
     {% endfor %}
 </div>
 

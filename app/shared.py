@@ -17,14 +17,14 @@ class ReadwiseAPIError(Exception):
         self.retry_after = retry_after
 
 
-def _api_headers() -> dict[str, str]:
+def api_headers() -> dict[str, str]:
     return {
         "Authorization": f"Token {READWISE_TOKEN}",
         "Content-Type": "application/json",
     }
 
 
-def _handle_api_response(resp: http_requests.Response) -> dict[str, Any]:
+def handle_api_response(resp: http_requests.Response) -> dict[str, Any]:
     if resp.status_code == 401:
         raise ReadwiseAPIError("Invalid API token — check your .env file.")
     if resp.status_code == 429:
@@ -39,11 +39,11 @@ def _handle_api_response(resp: http_requests.Response) -> dict[str, Any]:
     return resp.json()
 
 
-def _api_get(url: str, params: dict | None = None) -> dict[str, Any]:
+def api_get(url: str, params: dict | None = None) -> dict[str, Any]:
     """GET with a single transparent retry on 429."""
     for attempt in range(2):
         try:
-            resp = http_requests.get(url, headers=_api_headers(), params=params, timeout=15)
+            resp = http_requests.get(url, headers=api_headers(), params=params, timeout=15)
         except http_requests.RequestException:
             raise ReadwiseAPIError("Could not reach Readwise — check your network connection.")
         if resp.status_code == 429 and attempt == 0:
@@ -51,7 +51,7 @@ def _api_get(url: str, params: dict | None = None) -> dict[str, Any]:
             wait = min(int(retry_after) if retry_after else 5, 15)
             time.sleep(wait)
             continue
-        return _handle_api_response(resp)
+        return handle_api_response(resp)
     raise ReadwiseAPIError("Too many requests — wait a moment and tap to retry.")
 
 

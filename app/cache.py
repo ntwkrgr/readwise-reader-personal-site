@@ -27,7 +27,7 @@ def _article_key(doc_id: str) -> str:
     return f"article:{doc_id}"
 
 
-def _cached_fetch(key: str, fetch_fn, ttl: int) -> Any:
+def cached_fetch(key: str, fetch_fn, ttl: int) -> Any:
     """Double-checked lock: check -> lock -> check -> fetch -> store.
 
     expire=30 on the Lock auto-releases it if the holder dies mid-operation,
@@ -53,12 +53,12 @@ def invalidate_article_cache(doc_id: str) -> None:
     _cache.delete(_article_key(doc_id))
 
 
-def _can_refresh() -> bool:
+def can_refresh() -> bool:
     last = _cache.get("last_refresh")
     return last is None or (time.time() - last) >= REFRESH_COOLDOWN
 
 
-def _mark_refresh() -> None:
+def mark_refresh() -> None:
     _cache.set("last_refresh", time.time())
 
 

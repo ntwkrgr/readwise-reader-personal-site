@@ -4,7 +4,7 @@ from typing import Any
 
 from flask import flash, redirect, render_template, request, url_for
 
-from app.cache import _can_refresh, _mark_refresh, cache_age_seconds, invalidate_list_cache
+from app.cache import can_refresh, mark_refresh, cache_age_seconds, invalidate_list_cache
 from app.settings import SORT_COOKIE, VALID_SORTS
 from app.shared import ReadwiseAPIError, sanitize_html
 
@@ -39,9 +39,9 @@ def article_list():
     tag = request.args.get("tag")
 
     if refresh:
-        if _can_refresh():
+        if can_refresh():
             invalidate_list_cache()
-            _mark_refresh()
+            mark_refresh()
         else:
             flash("List was refreshed recently — try again in a moment.")
 
