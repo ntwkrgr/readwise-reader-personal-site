@@ -21,10 +21,29 @@ def fetch_highlights(page: int = 1) -> dict[str, Any]:
 
 
 def fetch_books() -> dict[str, Any]:
-    key = "highlights:books"
+    key = "highlights:books:all"
+
+    def fetch_all_books() -> dict[str, Any]:
+        url = f"{READWISE_V2_BASE}/books/"
+        all_results: list[dict[str, Any]] = []
+        combined: dict[str, Any] | None = None
+
+        while url:
+            data = api_get(url)
+            if combined is None:
+                combined = dict(data)
+            all_results.extend(data.get("results", []))
+            url = data.get("next")
+
+        if combined is None:
+            combined = {"results": [], "next": None}
+        combined["results"] = all_results
+        combined["next"] = None
+        return combined
+
     return cached_fetch(
         key,
-        lambda: api_get(f"{READWISE_V2_BASE}/books/"),
+        fetch_all_books,
         HIGHLIGHTS_CACHE_TTL,
     )
 

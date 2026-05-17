@@ -7,7 +7,7 @@ from app.shared import ReadwiseAPIError
 
 @highlights_bp.route("/")
 def highlights_list():
-    page = int(request.args.get("page", 1))
+    page = request.args.get("page", 1, type=int) or 1
     try:
         data = fetch_highlights(page=page)
         books_data = fetch_books()
