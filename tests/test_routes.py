@@ -51,6 +51,8 @@ def test_dashboard_renders_feature_links(client):
     assert resp.status_code == 200
     assert b"Reader" in resp.data
     assert b"Highlights" in resp.data
+    assert b"Bible" in resp.data
+    assert b"Settings" in resp.data
 
 
 def test_list_renders_articles(client):
