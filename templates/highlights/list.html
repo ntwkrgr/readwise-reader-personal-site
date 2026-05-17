@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Highlights{% endblock %}
+
+{% block styles %}
+<style>
+    .highlights-page {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    .highlights-heading {
+        font-size: 28px;
+        line-height: 1.2;
+        margin: 0 0 8px 0;
+    }
+    .highlights-meta {
+        font-size: 15px;
+        line-height: 1.4;
+        color: #333;
+        margin: 0 0 16px 0;
+    }
+    .highlight-source {
+        margin: 24px 0 0 0;
+        padding: 0 0 8px 0;
+        border-bottom: 2px solid #000;
+    }
+    .highlight-title {
+        font-size: 22px;
+        line-height: 1.25;
+        margin: 0;
+    }
+    .highlight-author {
+        font-size: 15px;
+        line-height: 1.4;
+        color: #333;
+        margin: 4px 0 0 0;
+    }
+    .highlight-card {
+        padding: 16px 0;
+        border-bottom: 1px solid #000;
+    }
+    .highlight-text {
+        font-size: 20px;
+        line-height: 1.45;
+        margin: 0;
+    }
+    .highlight-note {
+        font-size: 16px;
+        line-height: 1.45;
+        margin: 10px 0 0 0;
+        padding: 8px 0 0 12px;
+        border-left: 3px solid #000;
+    }
+    .highlights-pagination {
+        margin: 24px 0 0 0;
+    }
+    .highlights-pagination a {
+        display: inline-block;
+        min-height: 48px;
+        padding: 12px 18px;
+        margin: 0 8px 8px 0;
+        border: 2px solid #000;
+        border-radius: 8px;
+        color: #000;
+        text-decoration: none;
+        font-size: 16px;
+        line-height: 22px;
+    }
+    .theme-dark .highlights-meta,
+    .theme-dark .highlight-author {
+        color: #ccc;
+    }
+    .theme-dark .highlight-source,
+    .theme-dark .highlight-card,
+    .theme-dark .highlight-note,
+    .theme-dark .highlights-pagination a {
+        border-color: #fff;
+    }
+    .theme-dark .highlights-pagination a {
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="highlights-page">
+    <h1 class="highlights-heading">Highlights</h1>
+    <div class="highlights-meta">Page {{ page }} &middot; {{ count }} total highlights</div>
+
+    {% if highlights %}
+        {% set grouped_book_ids = highlights | map(attribute='book_id') | unique | list %}
+        {% for book_id in grouped_book_ids %}
+            {% set book = books.get(book_id, {}) %}
+            <section class="highlight-source">
+                <h2 class="highlight-title">{{ book.get("title") or "Unknown Source" }}</h2>
+                {% if book.get("author") %}
+                <div class="highlight-author">{{ book.get("author") }}</div>
+                {% endif %}
+            </section>
+            {% for highlight in highlights if highlight.book_id == book_id %}
+            <article class="highlight-card">
+                <p class="highlight-text">{{ highlight.text }}</p>
+                {% if highlight.note %}
+                <div class="highlight-note">{{ highlight.note }}</div>
+                {% endif %}
+            </article>
+            {% endfor %}
+        {% endfor %}
+    {% else %}
+        <div class="empty">No highlights found.</div>
+    {% endif %}
+
+    <nav class="highlights-pagination" aria-label="Highlights pages">
+        {% if prev_page %}
+        <a href="{{ url_for('highlights_bp.highlights_list', page=prev_page) }}">Previous page</a>
+        {% endif %}
+        {% if next_page %}
+        <a href="{{ url_for('highlights_bp.highlights_list', page=next_page) }}">Next page</a>
+        {% endif %}
+        <a href="{{ url_for('highlights_bp.daily_review') }}">Daily review</a>
+    </nav>
+</main>
+{% endblock %}
