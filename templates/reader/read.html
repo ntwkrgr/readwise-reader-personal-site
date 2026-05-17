@@ -8,11 +8,19 @@
     <a href="{{ url_for('settings_bp.settings') }}" class="btn">Settings</a>
     {% if has_content %}
     <a href="{{ url_for('reader_bp.add_note', doc_id=article.id) }}" class="btn">Add note</a>
+    <button id="highlight-btn" class="btn" style="display:none">Save Highlight</button>
+    <button id="highlight-mode-btn" class="btn">Highlight Mode</button>
     {% endif %}
     <form action="{{ url_for('reader_bp.do_archive', doc_id=article.id) }}" method="post" style="margin: 0;">
         <button type="submit" class="btn btn-dark">Archive</button>
     </form>
 </div>
+
+{% if has_content %}
+<form id="highlight-form" action="{{ url_for('reader_bp.save_highlight', doc_id=article.id) }}" method="POST" style="display:none">
+    <input type="hidden" id="highlight-text-input" name="text" value="">
+</form>
+{% endif %}
 
 <h1 style="font-size: 24px; margin-bottom: 4px;">{{ article.title }}</h1>
 {% if article.author %}
@@ -42,6 +50,70 @@
         <button type="submit" class="btn btn-dark">Archive</button>
     </form>
 </div>
+
+{% if has_content %}
+<script>
+(function() {
+    var selectionText = '';
+    var highlightBtn = document.getElementById('highlight-btn');
+    var highlightForm = document.getElementById('highlight-form');
+    var highlightInput = document.getElementById('highlight-text-input');
+    var highlightMode = false;
+    var highlightModeBtn = document.getElementById('highlight-mode-btn');
+
+    function onSelectionChange() {
+        var sel = window.getSelection ? window.getSelection() : null;
+        var text = sel ? sel.toString().trim() : '';
+        if (text.length > 0) {
+            selectionText = text;
+            highlightBtn.style.display = 'block';
+        } else {
+            highlightBtn.style.display = 'none';
+        }
+    }
+
+    function onParagraphClick(e) {
+        if (e && e.stopPropagation) {
+            e.stopPropagation();
+        }
+        var text = this.textContent.trim();
+        if (text) {
+            highlightInput.value = text;
+            highlightForm.submit();
+        }
+    }
+
+    document.addEventListener('mouseup', onSelectionChange);
+    document.addEventListener('touchend', onSelectionChange);
+
+    if (highlightBtn) {
+        highlightBtn.addEventListener('click', function() {
+            if (selectionText) {
+                highlightInput.value = selectionText;
+                highlightForm.submit();
+            }
+        });
+    }
+
+    if (highlightModeBtn) {
+        highlightModeBtn.addEventListener('click', function() {
+            highlightMode = !highlightMode;
+            highlightModeBtn.textContent = highlightMode ? 'Exit Highlight Mode' : 'Highlight Mode';
+            var paras = document.querySelectorAll('#article-content p');
+            for (var i = 0; i < paras.length; i++) {
+                if (highlightMode) {
+                    paras[i].style.cursor = 'pointer';
+                    paras[i].addEventListener('click', onParagraphClick);
+                } else {
+                    paras[i].style.cursor = '';
+                    paras[i].removeEventListener('click', onParagraphClick);
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endif %}
 
 {% if tap_advance_enabled and has_content %}
 <div class="tap-overlay tap-overlay-top" id="tap-overlay-top"></div>

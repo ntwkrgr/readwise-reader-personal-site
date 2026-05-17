@@ -144,6 +144,19 @@ def test_read_article_api_error_renders_error_page(client):
     assert b"Not found" in resp.data
 
 
+def test_highlight_rejects_empty_selection(client):
+    resp = client.post("/reader/read/abc123/highlight", data={"text": ""})
+    assert resp.status_code == 302
+
+
+def test_highlight_saves_to_readwise(client):
+    with patch.object(routes_module, "fetch_article", return_value=SAMPLE_ARTICLE):
+        with patch.object(routes_module, "save_highlight_to_readwise") as mock_save:
+            resp = client.post("/reader/read/abc123/highlight", data={"text": "Great quote"})
+    mock_save.assert_called_once()
+    assert resp.status_code == 302
+
+
 # --- Archive ---
 
 def test_archive_redirects_on_success(client):

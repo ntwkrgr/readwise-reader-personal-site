@@ -84,6 +84,32 @@ def read_article(doc_id: str):
     )
 
 
+@reader_bp.route("/read/<doc_id>/highlight", methods=["POST"])
+def save_highlight(doc_id: str):
+    text = (request.form.get("text") or "").strip()
+    if not text:
+        flash("No text selected.")
+        return redirect(url_for("reader_bp.read_article", doc_id=doc_id))
+    try:
+        article = fetch_article(doc_id)
+    except ReadwiseAPIError as e:
+        return render_template(
+            "error.html",
+            message=str(e),
+            retry_url=url_for("reader_bp.read_article", doc_id=doc_id),
+        )
+    try:
+        save_highlight_to_readwise(article, text)
+    except ReadwiseAPIError as e:
+        return render_template(
+            "error.html",
+            message=str(e),
+            retry_url=url_for("reader_bp.read_article", doc_id=doc_id),
+        )
+    flash("Highlight saved to Readwise.")
+    return redirect(url_for("reader_bp.read_article", doc_id=doc_id))
+
+
 @reader_bp.route("/read/<doc_id>/note", methods=["GET", "POST"])
 def add_note(doc_id: str):
     if request.method == "POST":
