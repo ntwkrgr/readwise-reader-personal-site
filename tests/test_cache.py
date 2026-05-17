@@ -4,7 +4,8 @@ import diskcache
 import pytest
 from unittest.mock import patch
 
-import app as module
+from app import cache as module
+from app.shared import ReadwiseAPIError
 
 
 @pytest.fixture(autouse=True)
@@ -94,9 +95,9 @@ def test_cached_fetch_different_keys_fetch_independently():
 
 def test_cached_fetch_propagates_exception():
     def fn():
-        raise module.ReadwiseAPIError("boom")
+        raise ReadwiseAPIError("boom")
 
-    with pytest.raises(module.ReadwiseAPIError, match="boom"):
+    with pytest.raises(ReadwiseAPIError, match="boom"):
         module._cached_fetch("err_key", fn, ttl=60)
 
 

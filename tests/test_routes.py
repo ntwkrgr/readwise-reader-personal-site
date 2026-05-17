@@ -4,8 +4,10 @@ import diskcache
 import pytest
 from unittest.mock import patch
 
-import app as module
-from app import app as flask_app
+from app import create_app
+from app import cache as cache_module
+from app.reader import routes as routes_module
+from app.shared import ReadwiseAPIError
 
 
 SAMPLE_ARTICLE = {
@@ -34,9 +36,9 @@ SAMPLE_LIST = {
 
 @pytest.fixture
 def client(tmp_path):
-    flask_app.config["TESTING"] = True
+    flask_app = create_app({"TESTING": True})
     cache = diskcache.Cache(str(tmp_path / "cache"))
-    with patch.object(module, "_cache", cache):
+    with patch.object(cache_module, "_cache", cache):
         with flask_app.test_client() as c:
             yield c
     cache.close()
@@ -44,66 +46,72 @@ def client(tmp_path):
 
 # --- Article list ---
 
+def test_dashboard_redirects_to_reader(client):
+    resp = client.get("/")
+    assert resp.status_code == 302
+    assert "/reader/" in resp.headers["Location"]
+
+
 def test_list_renders_articles(client):
-    with patch.object(module, "fetch_article_list", return_value=SAMPLE_LIST):
-        resp = client.get("/")
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST):
+        resp = client.get("/reader/")
     assert resp.status_code == 200
     assert b"Test Article" in resp.data
 
 
 def test_list_defaults_to_all_location(client):
-    with patch.object(module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
-        client.get("/")
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
+        client.get("/reader/")
     mock.assert_called_once_with(location="all", page_cursor=None, tag=None)
 
 
 def test_list_passes_location_param(client):
-    with patch.object(module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
-        client.get("/?location=later")
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
+        client.get("/reader/?location=later")
     mock.assert_called_once_with(location="later", page_cursor=None, tag=None)
 
 
 def test_list_invalid_location_falls_back_to_all(client):
-    with patch.object(module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
-        client.get("/?location=bogus")
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
+        client.get("/reader/?location=bogus")
     mock.assert_called_once_with(location="all", page_cursor=None, tag=None)
 
 
 def test_list_shows_cache_age_when_refreshed(client):
-    module._cache.set("last_refresh", time.time() - 300)  # 5 min ago
-    with patch.object(module, "fetch_article_list", return_value=SAMPLE_LIST):
-        resp = client.get("/")
+    cache_module._cache.set("last_refresh", time.time() - 300)  # 5 min ago
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST):
+        resp = client.get("/reader/")
     assert b"5m ago" in resp.data
 
 
 def test_list_shows_just_now_when_very_recent(client):
-    module._cache.set("last_refresh", time.time() - 10)
-    with patch.object(module, "fetch_article_list", return_value=SAMPLE_LIST):
-        resp = client.get("/")
+    cache_module._cache.set("last_refresh", time.time() - 10)
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST):
+        resp = client.get("/reader/")
     assert b"just now" in resp.data
 
 
 def test_list_api_error_renders_error_page(client):
-    with patch.object(module, "fetch_article_list", side_effect=module.ReadwiseAPIError("API down")):
-        resp = client.get("/")
+    with patch.object(routes_module, "fetch_article_list", side_effect=ReadwiseAPIError("API down")):
+        resp = client.get("/reader/")
     assert b"API down" in resp.data
 
 
 # --- Refresh cooldown ---
 
 def test_refresh_clears_cache_when_allowed(client):
-    module._cache.set("last_refresh", time.time() - 200)
-    with patch.object(module, "fetch_article_list", return_value=SAMPLE_LIST):
-        with patch.object(module, "invalidate_list_cache") as mock_inv:
-            client.get("/?refresh=1")
+    cache_module._cache.set("last_refresh", time.time() - 200)
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST):
+        with patch.object(routes_module, "invalidate_list_cache") as mock_inv:
+            client.get("/reader/?refresh=1")
     mock_inv.assert_called_once()
 
 
 def test_refresh_skipped_within_cooldown(client):
-    module._cache.set("last_refresh", time.time())  # Just refreshed
-    with patch.object(module, "fetch_article_list", return_value=SAMPLE_LIST):
-        with patch.object(module, "invalidate_list_cache") as mock_inv:
-            resp = client.get("/?refresh=1")
+    cache_module._cache.set("last_refresh", time.time())  # Just refreshed
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST):
+        with patch.object(routes_module, "invalidate_list_cache") as mock_inv:
+            resp = client.get("/reader/?refresh=1")
     mock_inv.assert_not_called()
     assert b"recently" in resp.data  # Flash message shown
 
@@ -111,8 +119,8 @@ def test_refresh_skipped_within_cooldown(client):
 # --- Read article ---
 
 def test_read_article_renders_content(client):
-    with patch.object(module, "fetch_article", return_value=SAMPLE_ARTICLE):
-        resp = client.get("/read/abc123")
+    with patch.object(routes_module, "fetch_article", return_value=SAMPLE_ARTICLE):
+        resp = client.get("/reader/read/abc123")
     assert resp.status_code == 200
     assert b"Test Article" in resp.data
     assert b"Hello world" in resp.data
@@ -120,31 +128,31 @@ def test_read_article_renders_content(client):
 
 def test_read_article_strips_images(client):
     article = {**SAMPLE_ARTICLE, "html_content": "<p>Text</p><img src='bad.jpg'><p>More</p>"}
-    with patch.object(module, "fetch_article", return_value=article):
-        resp = client.get("/read/abc123")
+    with patch.object(routes_module, "fetch_article", return_value=article):
+        resp = client.get("/reader/read/abc123")
     assert b"<img" not in resp.data
     assert b"Text" in resp.data
     assert b"More" in resp.data
 
 
 def test_read_article_api_error_renders_error_page(client):
-    with patch.object(module, "fetch_article", side_effect=module.ReadwiseAPIError("Not found")):
-        resp = client.get("/read/missing")
+    with patch.object(routes_module, "fetch_article", side_effect=ReadwiseAPIError("Not found")):
+        resp = client.get("/reader/read/missing")
     assert b"Not found" in resp.data
 
 
 # --- Archive ---
 
 def test_archive_redirects_on_success(client):
-    with patch.object(module, "archive_article"):
-        resp = client.post("/archive/abc123")
+    with patch.object(routes_module, "archive_article"):
+        resp = client.post("/reader/archive/abc123")
     assert resp.status_code == 302
-    assert "/" in resp.headers["Location"]
+    assert "/reader/" in resp.headers["Location"]
 
 
 def test_archive_api_error_renders_error_page(client):
-    with patch.object(module, "archive_article", side_effect=module.ReadwiseAPIError("Failed")):
-        resp = client.post("/archive/abc123")
+    with patch.object(routes_module, "archive_article", side_effect=ReadwiseAPIError("Failed")):
+        resp = client.post("/reader/archive/abc123")
     assert b"Failed" in resp.data
 
 

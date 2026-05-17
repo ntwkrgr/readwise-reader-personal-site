@@ -10,7 +10,7 @@
     <a href="{{ retry_url }}" class="btn">Tap to retry</a>
     {% endif %}
     <div style="margin-top: 16px;">
-        <a href="/" class="btn">Back to list</a>
+        <a href="{{ url_for('reader_bp.article_list') }}" class="btn">Back to list</a>
     </div>
 </div>
 {% endblock %}

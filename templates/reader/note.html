@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Add note — {{ article.title }}{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 22px; margin-bottom: 8px;">Add note</h1>
+<p style="margin-bottom: 16px;">Type your note below. It will be saved to Readwise for this article.</p>
+
+<form method="post" action="{{ url_for('reader_bp.add_note', doc_id=article.id) }}">
+    <textarea name="text" rows="6" style="width: 100%; padding: 12px; font-family: Georgia, serif; font-size: 18px; margin-bottom: 12px; border: 2px solid #000; border-radius: 8px;" placeholder="Type your note here..."></textarea>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button type="submit" class="btn btn-dark">Save to Readwise</button>
+        <a href="{{ url_for('reader_bp.read_article', doc_id=article.id) }}" class="btn">Cancel</a>
+    </div>
+</form>
+
+<p style="margin-top: 20px;">
+    <a href="{{ url_for('reader_bp.read_article', doc_id=article.id) }}" class="btn">Back to article</a>
+</p>
+{% endblock %}

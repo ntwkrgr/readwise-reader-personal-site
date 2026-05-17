@@ -5,7 +5,7 @@
 {% block content %}
 <h1 style="font-size: 22px; margin-bottom: 16px;">Text settings</h1>
 
-<form method="post" action="/settings" id="settings-form">
+<form method="post" action="{{ url_for('settings_bp.settings') }}" id="settings-form">
     <div style="margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Theme</p>
         <div class="settings-group">
@@ -61,7 +61,7 @@
     </noscript>
 </form>
 <p style="margin-top: 20px;">
-    <a href="/" class="btn">Back to list</a>
+    <a href="{{ url_for('reader_bp.article_list') }}" class="btn">Back to list</a>
 </p>
 <script>
 (function() {
