@@ -157,6 +157,19 @@ def test_highlight_saves_to_readwise(client):
     assert resp.status_code == 302
 
 
+def test_highlight_article_fetch_error_renders_error_page(client):
+    with patch.object(routes_module, "fetch_article", side_effect=ReadwiseAPIError("Not found")):
+        resp = client.post("/reader/read/abc123/highlight", data={"text": "some text"})
+    assert b"Not found" in resp.data
+
+
+def test_highlight_save_error_renders_error_page(client):
+    with patch.object(routes_module, "fetch_article", return_value=SAMPLE_ARTICLE):
+        with patch.object(routes_module, "save_highlight_to_readwise", side_effect=ReadwiseAPIError("API error")):
+            resp = client.post("/reader/read/abc123/highlight", data={"text": "some text"})
+    assert b"API error" in resp.data
+
+
 # --- Archive ---
 
 def test_archive_redirects_on_success(client):

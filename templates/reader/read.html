@@ -60,6 +60,7 @@
     var highlightInput = document.getElementById('highlight-text-input');
     var highlightMode = false;
     var highlightModeBtn = document.getElementById('highlight-mode-btn');
+    var articleContent = document.getElementById('article-content');
 
     function onSelectionChange() {
         var sel = window.getSelection ? window.getSelection() : null;
@@ -99,6 +100,9 @@
         highlightModeBtn.addEventListener('click', function() {
             highlightMode = !highlightMode;
             highlightModeBtn.textContent = highlightMode ? 'Exit Highlight Mode' : 'Highlight Mode';
+            if (articleContent) {
+                articleContent.classList.toggle('highlight-mode-active', highlightMode);
+            }
             var paras = document.querySelectorAll('#article-content p');
             for (var i = 0; i < paras.length; i++) {
                 if (highlightMode) {
@@ -138,6 +142,10 @@
             t = t.parentNode;
         }
         return false;
+    }
+
+    function isHighlightModeActive() {
+        return articleEl.classList.contains('highlight-mode-active');
     }
 
     function getScrollY() {
@@ -214,6 +222,11 @@
     }, false);
 
     articleEl.addEventListener('touchend', function(e) {
+        if (isHighlightModeActive()) {
+            startX = null;
+            startY = null;
+            return;
+        }
         if (startY === null) return;
         var t = e.changedTouches && e.changedTouches[0];
         var sx = startX, sy = startY;
@@ -229,6 +242,7 @@
     }, false);
 
     articleEl.addEventListener('click', function(e) {
+        if (isHighlightModeActive()) return;
         if (handledTouch) return;
         handleTap(e.target, e.clientX);
     }, false);
