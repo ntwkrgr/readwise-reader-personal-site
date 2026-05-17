@@ -1,4 +1,4 @@
-# Readwise Reader Personal Site
+# Readwise Reader Personal Dashboard
 
 ## Running
 
@@ -17,6 +17,10 @@ The container uses `restart: unless-stopped` — it recovers from crashes automa
 Requires `.env` file with `READWISE_TOKEN=your_token_here`
 
 See README.md for full setup instructions.
+
+## Architecture
+
+Flask Blueprints package under `app/`. Each feature is a blueprint: `app/dashboard.py` is the home page at `/`, `app/reader/` is the Readwise Reader at `/reader/`, `app/highlights/` is the Highlights browser at `/highlights/`, `app/bible/` is the Bible navigator at `/bible/`, `app/settings.py` is Settings at `/settings/`, and `app/cache.py` plus `app/shared.py` are shared utilities. Entry point is `app.py` shim pointing to `app/__init__.py` factory `create_app()`. Tests use pytest via `uv run pytest`.
 
 ## Common commands
 
