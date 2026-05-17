@@ -102,13 +102,16 @@
 
     function updateLink() {
         var translation = translationSelect.value;
-        var book = bookSelect.value;
         var chapter = chapterSelect.value;
-        goLink.href = "/bible/" + translation + "/" + book + "/" + chapter;
+        goLink.href = "/bible/" + translation + "/" + bookSelect.value + "/" + chapter;
     }
 
     translationSelect.onchange = updateLink;
-    bookSelect.onchange = updateLink;
+    document.getElementById('book-select').onchange = function() {
+        var t = document.getElementById('translation-select').value;
+        var b = this.value;
+        window.location.href = '/bible/?translation=' + t + '&book=' + b;
+    };
     chapterSelect.onchange = updateLink;
     updateLink();
 </script>

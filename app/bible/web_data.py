@@ -10,7 +10,10 @@ def _load() -> dict[str, Any]:
         return json.load(f)
 
 
-_raw = _load()
+try:
+    _raw = _load()
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    raise RuntimeError(f'data/web.json missing or invalid: {e}') from e
 _BOOKS: list[dict[str, Any]] = []
 _CHAPTER_INDEX: dict[tuple[str, int], list[dict[str, Any]]] = {}
 

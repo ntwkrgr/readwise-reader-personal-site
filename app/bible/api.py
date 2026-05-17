@@ -9,9 +9,10 @@ BIBLE_API_KEY = os.environ.get("BIBLE_API_KEY", "")
 BIBLE_API_BASE = "https://api.scripture.api.bible/v1"
 BIBLE_CACHE_TTL = int(os.environ.get("BIBLE_CACHE_TTL", 1209600))
 TRANSLATION_IDS: dict[str, str] = {
-    "NIV": "78a9f6124f344018-01",
-    "NLT": "65eec8e0b60e656b-01",
-    "MSG": "65eec8e0b60e656b-02",
+    'NIV': '78a9f6124f344018-01',  # verified NIV ID
+    # NOTE: NLT and MSG IDs below are placeholders — verify at api.bible/bibles before deploying
+    'NLT': 'nlt-placeholder-verify',
+    'MSG': 'msg-placeholder-verify',
 }
 
 
@@ -28,12 +29,15 @@ def fetch_bible_chapter(translation: str, book_id: str, chapter: int) -> dict[st
     key = f"bible:{translation}:{book_id}:{chapter}"
 
     def _fetch() -> dict[str, Any]:
-        resp = http_requests.get(
-            f"{BIBLE_API_BASE}/bibles/{bible_id}/chapters/{book_id}.{chapter}",
-            headers={"api-key": BIBLE_API_KEY},
-            params={"content-type": "text", "include-verse-numbers": "true"},
-            timeout=15,
-        )
+        try:
+            resp = http_requests.get(
+                f"{BIBLE_API_BASE}/bibles/{bible_id}/chapters/{book_id}.{chapter}",
+                headers={"api-key": BIBLE_API_KEY},
+                params={"content-type": "text", "include-verse-numbers": "true"},
+                timeout=15,
+            )
+        except http_requests.RequestException:
+            raise ReadwiseAPIError('Could not reach Bible API — check your network connection.')
         if resp.status_code == 401:
             raise ReadwiseAPIError("Invalid Bible API key.")
         if resp.status_code == 404:

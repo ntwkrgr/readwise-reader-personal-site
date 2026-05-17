@@ -43,7 +43,7 @@ def read_chapter(translation: str, book_id: str, chapter_num: int) -> str:
                 "error.html",
                 message=f"{book_name} chapter {chapter_num} not found.",
                 retry_url=url_for("bible_bp.navigator"),
-            )
+            ), 404
     else:
         try:
             data = fetch_bible_chapter(translation, book_id, chapter_num)
@@ -54,7 +54,7 @@ def read_chapter(translation: str, book_id: str, chapter_num: int) -> str:
                 "error.html",
                 message=str(e),
                 retry_url=url_for("bible_bp.navigator"),
-            )
+            ), 502
 
     return render_template(
         "bible/chapter.html",
