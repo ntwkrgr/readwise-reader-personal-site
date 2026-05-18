@@ -32,14 +32,17 @@ def highlights_list():
 def daily_review():
     try:
         data = fetch_daily_review()
+        books_data = fetch_books()
     except ReadwiseAPIError as e:
         return render_template("error.html", message=str(e), retry_url=request.url)
 
+    books = {b["id"]: b for b in books_data.get("results", [])}
     highlights = data.get("highlights", [])
     review_url = "https://readwise.io/review"
 
     return render_template(
         "highlights/review.html",
         highlights=highlights,
+        books=books,
         review_url=review_url,
     )

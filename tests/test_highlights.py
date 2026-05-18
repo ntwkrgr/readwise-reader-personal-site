@@ -97,10 +97,31 @@ def test_fetch_books_paginates_and_caches_all_results(client):
 
 def test_daily_review_renders(client):
     with patch.object(highlights_routes, "fetch_daily_review", return_value=SAMPLE_REVIEW_DATA):
-        resp = client.get("/highlights/review")
+        with patch.object(highlights_routes, "fetch_books", return_value=SAMPLE_BOOKS_DATA):
+            resp = client.get("/highlights/review")
     assert resp.status_code == 200
     assert b"Great quote from a book" in resp.data
+    assert b"Great Book" in resp.data
+    assert b"Great Author" in resp.data
     assert b"readwise.io/review" in resp.data
+
+
+def test_daily_review_uses_review_highlight_source_metadata(client):
+    review_data = {
+        "highlights": [{
+            **SAMPLE_HIGHLIGHT,
+            "book_id": None,
+            "title": "Review Article",
+            "author": "Review Author",
+        }],
+    }
+
+    with patch.object(highlights_routes, "fetch_daily_review", return_value=review_data):
+        with patch.object(highlights_routes, "fetch_books", return_value={"results": []}):
+            resp = client.get("/highlights/review")
+
+    assert b"Review Article" in resp.data
+    assert b"Review Author" in resp.data
 
 
 def test_daily_review_api_error_renders_error(client):

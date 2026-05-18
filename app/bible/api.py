@@ -6,13 +6,12 @@ from app.cache import cached_fetch
 from app.shared import ReadwiseAPIError
 
 BIBLE_API_KEY = os.environ.get("BIBLE_API_KEY", "")
-BIBLE_API_BASE = "https://api.scripture.api.bible/v1"
+BIBLE_API_BASE = "https://rest.api.bible/v1"
 BIBLE_CACHE_TTL = int(os.environ.get("BIBLE_CACHE_TTL", 1209600))
 TRANSLATION_IDS: dict[str, str] = {
-    'NIV': '78a9f6124f344018-01',  # verified NIV ID
-    # NOTE: NLT and MSG IDs below are placeholders — verify at api.bible/bibles before deploying
-    'NLT': 'nlt-placeholder-verify',
-    'MSG': 'msg-placeholder-verify',
+    'NIV': '78a9f6124f344018-01',
+    'NLT': 'd6e14a625393b4da-01',
+    'MSG': '6f11a7de016f942e-01',
 }
 
 
@@ -26,14 +25,14 @@ def fetch_bible_chapter(translation: str, book_id: str, chapter: int) -> dict[st
     bible_id = TRANSLATION_IDS.get(translation)
     if not bible_id:
         raise ReadwiseAPIError(f"Unknown translation: {translation}")
-    key = f"bible:{translation}:{book_id}:{chapter}"
+    key = f"bible:no-verse-numbers:{translation}:{book_id}:{chapter}"
 
     def _fetch() -> dict[str, Any]:
         try:
             resp = http_requests.get(
                 f"{BIBLE_API_BASE}/bibles/{bible_id}/chapters/{book_id}.{chapter}",
                 headers={"api-key": BIBLE_API_KEY},
-                params={"content-type": "text", "include-verse-numbers": "true"},
+                params={"content-type": "text", "include-verse-numbers": "false"},
                 timeout=15,
             )
         except http_requests.RequestException:

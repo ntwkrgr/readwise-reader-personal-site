@@ -48,8 +48,8 @@
 {% block content %}
 <main class="dashboard-menu">
     <a class="dashboard-link" href="{{ url_for('reader_bp.article_list') }}">Reader</a>
-    <a class="dashboard-link" href="/highlights/">Highlights</a>{# route registered in later step #}
-    <a class="dashboard-link" href="/bible/">Bible</a>{# route registered in later step #}
+    <a class="dashboard-link" href="{{ url_for('highlights_bp.highlights_list') }}">Highlights</a>
+    <a class="dashboard-link" href="{{ url_for('bible_bp.navigator') }}">Bible</a>
     <a class="dashboard-link" href="{{ url_for('settings_bp.settings') }}">Settings</a>
 </main>
 {% endblock %}

@@ -335,6 +335,24 @@
     {% block styles %}{% endblock %}
 </head>
 <body class="text-size-{{ text_size }} text-weight-{{ text_weight }} theme-{{ theme }}">
+    {% if theme == "auto" %}
+    <script>
+    (function applyAutoTheme() {
+        var body = document.body;
+        if (!body || !window.matchMedia) return;
+        var media = window.matchMedia('(prefers-color-scheme: dark)');
+        function syncTheme() {
+            body.classList.toggle('theme-dark', media.matches);
+        }
+        syncTheme();
+        if (media.addEventListener) {
+            media.addEventListener('change', syncTheme);
+        } else if (media.addListener) {
+            media.addListener(syncTheme);
+        }
+    })();
+    </script>
+    {% endif %}
     {% with messages = get_flashed_messages() %}
     {% if messages %}
     {% for msg in messages %}

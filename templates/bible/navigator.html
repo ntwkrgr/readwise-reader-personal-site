@@ -2,8 +2,6 @@
 
 {% block title %}Bible Navigator{% endblock %}
 
-{% block nav %}{% endblock %}
-
 {% block styles %}
 <style>
     .bible-page {
@@ -15,11 +13,16 @@
         margin: 0 0 20px 0;
     }
     .bible-form {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
         margin: 0;
     }
     .bible-field {
         display: block;
-        margin: 0 0 16px 0;
+        flex: 1 1 150px;
+        margin: 0;
     }
     .bible-label {
         display: block;
@@ -49,6 +52,7 @@
         font: 16px/24px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
         text-align: center;
         text-decoration: none;
+        cursor: pointer;
     }
     .theme-dark .bible-select {
         border-color: #fff;
@@ -66,10 +70,10 @@
 {% block content %}
 <main class="bible-page">
     <h1 class="bible-heading">Bible Navigator</h1>
-    <form class="bible-form">
+    <form class="bible-form" id="bible-nav-form" action="/bible/{{ selected_translation }}/{{ selected_book }}/{{ selected_chapter }}" method="get">
         <label class="bible-field" for="translation-select">
             <span class="bible-label">Translation</span>
-            <select class="bible-select" id="translation-select" name="translation">
+            <select class="bible-select" id="translation-select">
                 {% for translation in translations %}
                 <option value="{{ translation }}" {% if translation == selected_translation %}selected{% endif %}>{{ translation }}</option>
                 {% endfor %}
@@ -77,7 +81,7 @@
         </label>
         <label class="bible-field" for="book-select">
             <span class="bible-label">Book</span>
-            <select class="bible-select" id="book-select" name="book">
+            <select class="bible-select" id="book-select">
                 {% for book in books %}
                 <option value="{{ book.id }}" {% if book.id == selected_book %}selected{% endif %}>{{ book.name }}</option>
                 {% endfor %}
@@ -85,34 +89,50 @@
         </label>
         <label class="bible-field" for="chapter-select">
             <span class="bible-label">Chapter</span>
-            <select class="bible-select" id="chapter-select" name="chapter">
+            <select class="bible-select" id="chapter-select">
                 {% for chapter in chapters %}
-                <option value="{{ chapter }}">{{ chapter }}</option>
+                <option value="{{ chapter }}"{% if chapter == selected_chapter %} selected{% endif %}>{{ chapter }}</option>
                 {% endfor %}
             </select>
         </label>
-        <a class="bible-action" id="go-link" href="/bible/{{ selected_translation }}/{{ selected_book }}/1">Go to Chapter</a>
+        <button class="bible-action" id="go-button" type="submit">GO</button>
     </form>
 </main>
 <script>
+    var bookChapterCounts = {{ book_chapter_counts | tojson }};
+    var navForm = document.getElementById("bible-nav-form");
     var translationSelect = document.getElementById("translation-select");
     var bookSelect = document.getElementById("book-select");
     var chapterSelect = document.getElementById("chapter-select");
-    var goLink = document.getElementById("go-link");
 
-    function updateLink() {
+    function navigationPath() {
         var translation = translationSelect.value;
         var chapter = chapterSelect.value;
-        goLink.href = "/bible/" + translation + "/" + bookSelect.value + "/" + chapter;
+        return "/bible/" + translation + "/" + bookSelect.value + "/" + chapter;
     }
 
-    translationSelect.onchange = updateLink;
-    document.getElementById('book-select').onchange = function() {
-        var t = document.getElementById('translation-select').value;
-        var b = this.value;
-        window.location.href = '/bible/?translation=' + t + '&book=' + b;
-    };
-    chapterSelect.onchange = updateLink;
-    updateLink();
+    function updateFormAction() {
+        navForm.action = navigationPath();
+    }
+
+    function updateChapterOptions() {
+        var maxChapters = bookChapterCounts[bookSelect.value] || 1;
+        var currentChapter = parseInt(chapterSelect.value, 10) || 1;
+        var selectedChapter = Math.min(currentChapter, maxChapters);
+        chapterSelect.innerHTML = "";
+        for (var i = 1; i <= maxChapters; i++) {
+            var opt = document.createElement("option");
+            opt.value = i;
+            opt.textContent = i;
+            if (i === selectedChapter) opt.selected = true;
+            chapterSelect.appendChild(opt);
+        }
+        updateFormAction();
+    }
+
+    translationSelect.onchange = updateFormAction;
+    bookSelect.onchange = updateChapterOptions;
+    chapterSelect.onchange = updateFormAction;
+    updateFormAction();
 </script>
 {% endblock %}

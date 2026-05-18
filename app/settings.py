@@ -9,7 +9,7 @@ TAP_ADVANCE_COOKIE = "readwise_tap_advance"
 SORT_COOKIE = "readwise_sort"
 VALID_TEXT_SIZES = {"small", "medium", "large"}
 VALID_TEXT_WEIGHTS = {"normal", "bold"}
-VALID_THEMES = {"light", "dark"}
+VALID_THEMES = {"auto", "light", "dark"}
 VALID_TAP_ADVANCE = {"on", "off"}
 VALID_SORTS = {"newest", "oldest", "random"}
 

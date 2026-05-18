@@ -2,10 +2,36 @@
 
 {% block title %}{{ book_name }} {{ chapter_num }}{% endblock %}
 
-{% block nav %}{% endblock %}
-
 {% block styles %}
 <style>
+    .bible-nav-top {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .bible-nav-top select {
+        flex: 1;
+        min-width: 80px;
+        min-height: 48px;
+        padding: 10px 12px;
+        border: 2px solid #000;
+        border-radius: 8px;
+        background: #fff;
+        color: #000;
+        font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    .bible-go {
+        min-height: 48px;
+        padding: 10px 18px;
+        border: 2px solid #000;
+        border-radius: 8px;
+        background: #000;
+        color: #fff;
+        font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        cursor: pointer;
+    }
     .bible-reader {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
     }
@@ -22,21 +48,33 @@
     .bible-reader strong {
         font-weight: 700;
     }
-    .bible-nav {
+    .bible-footer {
+        display: flex;
+        gap: 8px;
         margin: 24px 0 0 0;
+        flex-wrap: wrap;
     }
-    .bible-nav a {
+    .bible-footer a {
         display: inline-block;
         min-height: 48px;
         padding: 12px 18px;
-        margin: 0 8px 8px 0;
         border: 2px solid #000;
         border-radius: 8px;
         color: #000;
         font: 16px/22px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
         text-decoration: none;
     }
-    .theme-dark .bible-nav a {
+    .theme-dark .bible-nav-top select {
+        border-color: #fff;
+        background: #000;
+        color: #fff;
+    }
+    .theme-dark .bible-go {
+        border-color: #fff;
+        background: #fff;
+        color: #000;
+    }
+    .theme-dark .bible-footer a {
         border-color: #fff;
         color: #fff;
     }
@@ -44,12 +82,35 @@
 {% endblock %}
 
 {% block content %}
-<main class="bible-reader">
+<form class="bible-nav-top" id="chapter-nav-form" action="/bible/{{ translation }}/{{ book_id }}/{{ chapter_num }}" method="get" aria-label="Bible navigation">
+    <select id="nav-translation" aria-label="Translation">
+        {% for t in translations %}
+        <option value="{{ t }}"{% if t == translation %} selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+    </select>
+    <select id="nav-book" aria-label="Book">
+        {% for book in books %}
+        <option value="{{ book.id }}"{% if book.id == book_id %} selected{% endif %}>{{ book.name }}</option>
+        {% endfor %}
+    </select>
+    <select id="nav-chapter" aria-label="Chapter">
+        {% for ch in chapters %}
+        <option value="{{ ch }}"{% if ch == chapter_num %} selected{% endif %}>{{ ch }}</option>
+        {% endfor %}
+    </select>
+    <button class="bible-go" id="nav-go" type="submit">GO</button>
+</form>
+<main
+    class="bible-reader"
+    id="bible-reader"
+    {% if prev_chapter %}data-prev-url="{{ url_for('bible_bp.read_chapter', translation=translation, book_id=book_id, chapter_num=prev_chapter) }}"{% endif %}
+    {% if next_chapter %}data-next-url="{{ url_for('bible_bp.read_chapter', translation=translation, book_id=book_id, chapter_num=next_chapter) }}"{% endif %}
+>
     <h1>{{ book_name }} {{ chapter_num }}</h1>
     <article>
         {% if verses %}
             {% for v in verses %}
-            <p><strong>{{ v.number }}</strong> {{ v.text }}</p>
+            <p>{{ v.text }}</p>
             {% endfor %}
         {% endif %}
         {% if content_html %}
@@ -59,14 +120,174 @@
             <img src="{{ fums_url }}" style="display:none" alt="">
         {% endif %}
     </article>
-    <nav class="bible-nav" aria-label="Chapter navigation">
+    {% if not tap_advance_enabled %}
+    <nav class="bible-footer" aria-label="Chapter navigation">
         {% if prev_chapter %}
-        <a href="{{ url_for('bible_bp.read_chapter', translation=translation, book_id=book_id, chapter_num=prev_chapter) }}">Previous Chapter</a>
+        <a href="{{ url_for('bible_bp.read_chapter', translation=translation, book_id=book_id, chapter_num=prev_chapter) }}">← Previous</a>
         {% endif %}
         {% if next_chapter %}
-        <a href="{{ url_for('bible_bp.read_chapter', translation=translation, book_id=book_id, chapter_num=next_chapter) }}">Next Chapter</a>
+        <a href="{{ url_for('bible_bp.read_chapter', translation=translation, book_id=book_id, chapter_num=next_chapter) }}">Next →</a>
         {% endif %}
-        <a href="{{ url_for('bible_bp.navigator', translation=translation, book=book_id) }}">Back to Navigator</a>
     </nav>
+    {% endif %}
 </main>
+<script>
+    var bookChapterCounts = {{ book_chapter_counts | tojson }};
+    var navForm = document.getElementById('chapter-nav-form');
+    var navTranslation = document.getElementById('nav-translation');
+    var navBook = document.getElementById('nav-book');
+    var navChapter = document.getElementById('nav-chapter');
+
+    function navigationPath() {
+        return '/bible/' + navTranslation.value + '/' + navBook.value + '/' + navChapter.value;
+    }
+
+    function updateFormAction() {
+        navForm.action = navigationPath();
+    }
+
+    navBook.onchange = function() {
+        var maxChapters = bookChapterCounts[this.value] || 1;
+        var currentChapter = parseInt(navChapter.value, 10) || 1;
+        navChapter.innerHTML = '';
+        for (var i = 1; i <= maxChapters; i++) {
+            var opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = i;
+            if (i === Math.min(currentChapter, maxChapters)) opt.selected = true;
+            navChapter.appendChild(opt);
+        }
+        updateFormAction();
+    };
+
+    navTranslation.onchange = updateFormAction;
+    navChapter.onchange = updateFormAction;
+    updateFormAction();
+</script>
+{% if tap_advance_enabled %}
+<div class="tap-overlay tap-overlay-top" id="tap-overlay-top"></div>
+<div class="tap-overlay tap-overlay-bottom" id="tap-overlay-bottom"></div>
+<script>
+(function() {
+    var readerEl = document.getElementById('bible-reader');
+    if (!readerEl) return;
+    var topOv = document.getElementById('tap-overlay-top');
+    var botOv = document.getElementById('tap-overlay-bottom');
+    var prevUrl = readerEl.getAttribute('data-prev-url');
+    var nextUrl = readerEl.getAttribute('data-next-url');
+    var OVERLAP = 80;
+    var TAP_THRESHOLD = 10;
+    var EDGE_HIDE = 40;
+    var startX = null;
+    var startY = null;
+    var handledTouch = false;
+
+    function isInInteractive(target) {
+        var t = target;
+        while (t && t !== document) {
+            if (t.tagName === 'A' || t.tagName === 'BUTTON' || t.tagName === 'FORM' || t.tagName === 'SELECT' || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') return true;
+            t = t.parentNode;
+        }
+        return false;
+    }
+
+    function getScrollY() {
+        var y = window.pageYOffset;
+        if (typeof y !== 'number') {
+            y = document.documentElement.scrollTop || document.body.scrollTop || 0;
+        }
+        return y;
+    }
+
+    function getPageHeight() {
+        return Math.max(document.body.scrollHeight || 0, document.documentElement.scrollHeight || 0);
+    }
+
+    function getViewportH() {
+        return window.innerHeight || document.documentElement.clientHeight || 600;
+    }
+
+    function getViewportW() {
+        return window.innerWidth || document.documentElement.clientWidth || 800;
+    }
+
+    function stepAmount() {
+        var amount = getViewportH() - OVERLAP;
+        return amount < 100 ? 100 : amount;
+    }
+
+    function goForward() {
+        var viewport = getViewportH();
+        var maxScroll = getPageHeight() - viewport;
+        var current = getScrollY();
+        if (maxScroll <= 0 || current >= maxScroll - 2) {
+            if (nextUrl) window.location.href = nextUrl;
+            return;
+        }
+        window.scrollBy(0, stepAmount());
+        updateOverlays();
+    }
+
+    function goBack() {
+        var current = getScrollY();
+        if (current <= 0) {
+            if (prevUrl) window.location.href = prevUrl;
+            return;
+        }
+        window.scrollBy(0, -stepAmount());
+        updateOverlays();
+    }
+
+    function updateOverlays() {
+        if (!topOv || !botOv) return;
+        var current = getScrollY();
+        var maxScroll = getPageHeight() - getViewportH();
+        topOv.style.display = (prevUrl || current > EDGE_HIDE) ? 'block' : 'none';
+        botOv.style.display = (nextUrl || (maxScroll > 0 && current < maxScroll - EDGE_HIDE)) ? 'block' : 'none';
+    }
+
+    function handleTap(target, clientX) {
+        if (isInInteractive(target)) return;
+        if (clientX < getViewportW() / 2) {
+            goBack();
+        } else {
+            goForward();
+        }
+    }
+
+    document.addEventListener('touchstart', function(e) {
+        if (e.touches && e.touches.length === 1) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        } else {
+            startX = null;
+            startY = null;
+        }
+    }, false);
+
+    document.addEventListener('touchend', function(e) {
+        if (startY === null) return;
+        var t = e.changedTouches && e.changedTouches[0];
+        var sx = startX, sy = startY;
+        startX = null;
+        startY = null;
+        if (!t) return;
+        var dx = Math.abs(t.clientX - sx);
+        var dy = Math.abs(t.clientY - sy);
+        if (dx > TAP_THRESHOLD || dy > TAP_THRESHOLD) return;
+        handledTouch = true;
+        handleTap(e.target, t.clientX);
+        setTimeout(function() { handledTouch = false; }, 500);
+    }, false);
+
+    document.addEventListener('click', function(e) {
+        if (handledTouch) return;
+        handleTap(e.target, e.clientX);
+    }, false);
+
+    window.addEventListener('scroll', updateOverlays, false);
+    updateOverlays();
+})();
+</script>
+{% endif %}
 {% endblock %}

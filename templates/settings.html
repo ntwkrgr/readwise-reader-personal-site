@@ -9,6 +9,8 @@
     <div style="margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 8px;">Theme</p>
         <div class="settings-group">
+            <input type="radio" class="settings-radio" id="opt-theme-auto" name="theme" value="auto" {{ 'checked' if theme == 'auto' else '' }}>
+            <label for="opt-theme-auto" class="settings-option">Auto</label>
             <input type="radio" class="settings-radio" id="opt-theme-light" name="theme" value="light" {{ 'checked' if theme == 'light' else '' }}>
             <label for="opt-theme-light" class="settings-option">Light</label>
             <input type="radio" class="settings-radio" id="opt-theme-dark" name="theme" value="dark" {{ 'checked' if theme == 'dark' else '' }}>

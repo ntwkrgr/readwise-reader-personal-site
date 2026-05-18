@@ -36,6 +36,15 @@
         line-height: 1.45;
         margin: 0;
     }
+    .review-source {
+        font-size: 16px;
+        line-height: 1.35;
+        margin: 0 0 8px 0;
+        font-weight: 700;
+    }
+    .review-author {
+        font-weight: 400;
+    }
     .review-note {
         font-size: 16px;
         line-height: 1.45;
@@ -63,6 +72,17 @@
     {% if highlights %}
         {% for highlight in highlights %}
         <article class="review-card">
+            {% set book = books.get(highlight.book_id) if highlight.book_id else None %}
+            {% set source_title = highlight.title or (book.get("title") if book else None) %}
+            {% set source_author = highlight.author or (book.get("author") if book else None) %}
+            {% if source_title %}
+            <div class="review-source">
+                {{ source_title }}
+                {% if source_author %}
+                <span class="review-author">· {{ source_author }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
             <p class="review-text">{{ highlight.text }}</p>
             {% if highlight.note %}
             <div class="review-note">{{ highlight.note }}</div>

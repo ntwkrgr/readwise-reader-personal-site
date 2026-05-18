@@ -190,6 +190,7 @@ def test_archive_api_error_renders_error_page(client):
 def test_settings_get_renders(client):
     resp = client.get("/settings")
     assert resp.status_code == 200
+    assert b"Auto" in resp.data
 
 
 def test_settings_post_sets_cookies_and_redirects(client):
@@ -204,6 +205,28 @@ def test_settings_post_sets_cookies_and_redirects(client):
     set_cookies = "\n".join(resp.headers.getlist("Set-Cookie"))
     assert "readwise_text_size=large" in set_cookies
     assert "readwise_theme=dark" in set_cookies
+
+
+def test_settings_post_accepts_auto_theme(client):
+    resp = client.post("/settings", data={
+        "text_size": "medium",
+        "text_weight": "normal",
+        "theme": "auto",
+        "tap_advance": "off",
+        "default_sort": "newest",
+    })
+
+    set_cookies = "\n".join(resp.headers.getlist("Set-Cookie"))
+    assert "readwise_theme=auto" in set_cookies
+
+
+def test_auto_theme_adds_auto_body_class(client):
+    client.set_cookie("readwise_theme", "auto")
+
+    resp = client.get("/")
+
+    assert b"theme-auto" in resp.data
+    assert b"applyAutoTheme" in resp.data
 
 
 def test_settings_post_rejects_invalid_values(client):
