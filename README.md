@@ -6,8 +6,9 @@ A multi-feature personal dashboard built with Flask. It keeps the original Kindl
 
 - **Dashboard home** at `/` for navigating the available tools.
 - **Readwise Reader** at `/reader/` for browsing and reading Readwise Reader articles.
-- **Highlights Browser** at `/highlights/` with paginated Readwise highlights and daily review.
-- **Bible Navigator** at `/bible/` with the WEB translation bundled locally and API.Bible optional for NIV/NLT/MSG.
+- **Daily Review** at `/highlights/` with source titles and a link to the active Readwise review.
+- **Highlights Browser** at `/highlights/all` with paginated Readwise highlights.
+- **Bible Navigator** at `/bible/` for NIV, NLT, and MSG chapters fetched through API.Bible.
 
 ## Setup
 
@@ -20,6 +21,8 @@ cp .env.example .env
 ```
 
 Edit `.env` and replace `your_readwise_access_token_here` with your actual token. Optionally set `SECRET_KEY` to any random string (used for flash message session cookies).
+
+Set `BIBLE_API_KEY` if you want to use the Bible navigator. The Bible feature uses API.Bible for NIV, NLT, and MSG.
 
 2. **Start with Docker:**
 
@@ -50,7 +53,7 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 | `CACHE_DIR` | No | `<app_dir>/.cache` | Disk cache location for API responses. |
 | `LIST_CACHE_TTL` | No | `1200` | Readwise list cache TTL in seconds. |
 | `ARTICLE_CACHE_TTL` | No | `3600` | Readwise article cache TTL in seconds. |
-| `BIBLE_API_KEY` | No | none | Enables NIV/NLT/MSG through API.Bible. |
+| `BIBLE_API_KEY` | No | none | Enables the Bible navigator for NIV/NLT/MSG through API.Bible. |
 | `BIBLE_CACHE_TTL` | No | `1209600` | Bible API cache TTL in seconds, capped at the API.Bible ToS max of 14 days. |
 
 ## Usage
@@ -72,17 +75,21 @@ Open `/` for a simple launch point into the dashboard features. Use it when swit
 
 ### Highlights Browser
 
-- Open `/highlights/` to browse paginated Readwise highlights.
-- Use the daily review flow to revisit saved highlights in smaller batches.
-- Highlight saving uses minimal JavaScript for interaction feedback.
+- Open `/highlights/` for the Daily Review. It shows each highlight with its source title/author when available.
+- The **Complete Review on Readwise** button uses the `review_url` returned by Readwise, such as `https://readwise.io/reviews/<review_id>`.
+- Open `/highlights/all` to browse paginated Readwise highlights.
+- Use **Previous page** and **Next page** at the bottom of the paginated list.
 
 ### Bible Navigator
 
-- Open `/bible/` to navigate Bible books, chapters, and verses.
-- WEB is available from bundled local data without an external API key.
-- The bundled data/web.json is a development stub with partial WEB text. For the full WEB Bible, see openbible.info/codes/web and replace data/web.json.
-- NIV, NLT, and MSG require an API.Bible key (free tier available). NLT and MSG translation IDs are placeholders -- verify against api.bible/bibles before use.
-- Minimal JS is used for highlight saving and Bible navigation (ES2015/Chrome 75+ only).
+- Open `/bible/` to navigate by translation, book, and chapter.
+- The selector supports NIV, NLT, and MSG. WEB/local bundled text is not exposed in the UI.
+- Changing a selector does not navigate immediately. Use the **GO** button to load the selected chapter.
+- API.Bible content is requested as HTML to preserve paragraph breaks, section headings, and translation formatting.
+- API.Bible requests include notes and omit verse numbers.
+- Bible chapter pages include bottom chapter controls: `<` for previous chapter and `>` for next chapter.
+- When tap-to-progress is enabled, tapping the left/right side of the page moves backward/forward through the chapter; at the top or bottom it can move to the previous/next chapter.
+- Minimal JS is used for Reader highlighting and Bible navigation (ES2015/Chrome 75+ only).
 
 ## API Usage and Caching
 
@@ -102,8 +109,9 @@ The **Settings** panel lets you tune the reading experience for your display and
 
 - **Text size** -- scale up or down from the default for comfortable reading on e-ink.
 - **Font weight** -- adjust between light and bold to suit your screen's contrast.
-- **Dark mode** -- invert to a dark background for low-light reading.
-- **Sort order** -- sort your article list by date added, or by note activity if you're working through annotated reading.
+- **Theme** -- choose light, dark, or auto. Auto follows the browser/device color scheme when supported.
+- **Tap to progress** -- tap the left/right side of reader and Bible pages to page backward/forward without visible fade overlays.
+- **Sort order** -- sort your article list by newest, oldest, or random.
 
 Settings persist across sessions.
 

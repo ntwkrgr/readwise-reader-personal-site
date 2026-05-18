@@ -25,7 +25,10 @@ def client(tmp_path):
 def test_navigator_renders(client):
     resp = client.get("/bible/")
     assert resp.status_code == 200
-    assert b"WEB" in resp.data
+    assert b"NIV" in resp.data
+    assert b"NLT" in resp.data
+    assert b"MSG" in resp.data
+    assert b"WEB" not in resp.data
 
 
 def test_navigator_includes_home_link(client):
@@ -55,7 +58,7 @@ def test_navigator_dropdown_changes_do_not_navigate_before_go(client):
 
 
 def test_navigator_query_parameters_override_saved_position(client):
-    client.set_cookie("bible_last", "WEB/JHN/3")
+    client.set_cookie("bible_last", "NIV/JHN/3")
 
     resp = client.get("/bible/?book=GEN")
     soup = BeautifulSoup(resp.data, "html.parser")
@@ -64,14 +67,27 @@ def test_navigator_query_parameters_override_saved_position(client):
     assert soup.select_one("#book-select option[selected]")["value"] == "GEN"
 
 
-def test_web_chapter_renders(client):
-    resp = client.get("/bible/WEB/GEN/1")
+def test_api_chapter_renders(client):
+    fake_data = {
+        "data": {
+            "content": '<p class="s1">The Beginning</p><p class="p">In the beginning</p>',
+            "fums_url": None,
+        }
+    }
+    with patch.object(bible_routes, "fetch_bible_chapter", return_value=fake_data):
+        resp = client.get("/bible/NIV/GEN/1")
+
     assert resp.status_code == 200
     assert b"Genesis" in resp.data
+    assert b'class="s1"' in resp.data
+    assert b'class="p"' in resp.data
+    assert b"In the beginning" in resp.data
 
 
-def test_web_chapter_omits_verse_numbers(client):
-    resp = client.get("/bible/WEB/GEN/1")
+def test_api_chapter_render_omits_local_verse_number_markup(client):
+    fake_data = {"data": {"content": "<p>In the beginning</p>", "fums_url": None}}
+    with patch.object(bible_routes, "fetch_bible_chapter", return_value=fake_data):
+        resp = client.get("/bible/NIV/GEN/1")
     soup = BeautifulSoup(resp.data, "html.parser")
 
     assert soup.select_one(".bible-reader article strong") is None
@@ -79,7 +95,9 @@ def test_web_chapter_omits_verse_numbers(client):
 
 
 def test_chapter_includes_home_link(client):
-    resp = client.get("/bible/WEB/JHN/1")
+    fake_data = {"data": {"content": "<p>John text</p>", "fums_url": None}}
+    with patch.object(bible_routes, "fetch_bible_chapter", return_value=fake_data):
+        resp = client.get("/bible/NIV/JHN/1")
     soup = BeautifulSoup(resp.data, "html.parser")
     home_link = soup.find("a", string="Home")
 
@@ -88,7 +106,9 @@ def test_chapter_includes_home_link(client):
 
 
 def test_chapter_nav_uses_canonical_chapter_count_and_go_button(client):
-    resp = client.get("/bible/WEB/GEN/1")
+    fake_data = {"data": {"content": "<p>In the beginning</p>", "fums_url": None}}
+    with patch.object(bible_routes, "fetch_bible_chapter", return_value=fake_data):
+        resp = client.get("/bible/NIV/GEN/1")
     soup = BeautifulSoup(resp.data, "html.parser")
     chapter_options = soup.select("#nav-chapter option")
 
@@ -97,46 +117,60 @@ def test_chapter_nav_uses_canonical_chapter_count_and_go_button(client):
 
 
 def test_chapter_nav_dropdown_changes_do_not_navigate_before_go(client):
-    resp = client.get("/bible/WEB/GEN/1")
+    fake_data = {"data": {"content": "<p>In the beginning</p>", "fums_url": None}}
+    with patch.object(bible_routes, "fetch_bible_chapter", return_value=fake_data):
+        resp = client.get("/bible/NIV/GEN/1")
     html = resp.data.decode()
 
     assert "window.location.href" not in html
 
 
-def test_bible_tap_advance_enabled_replaces_footer_chapter_buttons(client):
+def test_bible_tap_advance_enabled_keeps_bottom_chapter_buttons(client):
     client.set_cookie("readwise_tap_advance", "on")
+    fake_data = {"data": {"content": "<p>John text</p>", "fums_url": None}}
 
-    resp = client.get("/bible/WEB/JHN/2")
-    soup = BeautifulSoup(resp.data, "html.parser")
-
-    assert soup.select_one("#tap-overlay-top") is not None
-    assert soup.select_one("#tap-overlay-bottom") is not None
-    assert soup.select_one("#bible-reader")["data-prev-url"] == "/bible/WEB/JHN/1"
-    assert soup.select_one("#bible-reader")["data-next-url"] == "/bible/WEB/JHN/3"
-    assert "Next \u2192" not in resp.data.decode()
-    assert "\u2190 Previous" not in resp.data.decode()
-
-
-def test_bible_tap_advance_disabled_keeps_footer_chapter_buttons(client):
-    resp = client.get("/bible/WEB/JHN/2")
+    with patch.object(bible_routes, "fetch_bible_chapter", return_value=fake_data):
+        resp = client.get("/bible/NIV/JHN/2")
     soup = BeautifulSoup(resp.data, "html.parser")
 
     assert soup.select_one("#tap-overlay-top") is None
-    assert b"Next \xe2\x86\x92" in resp.data
-    assert b"\xe2\x86\x90 Previous" in resp.data
+    assert soup.select_one("#tap-overlay-bottom") is None
+    assert "tap-overlay" not in resp.data.decode()
+    assert soup.select_one("#bible-reader")["data-prev-url"] == "/bible/NIV/JHN/1"
+    assert soup.select_one("#bible-reader")["data-next-url"] == "/bible/NIV/JHN/3"
+    prev_link = soup.find("a", string="<")
+    next_link = soup.find("a", string=">")
+    assert prev_link is not None
+    assert prev_link["href"] == "/bible/NIV/JHN/1"
+    assert next_link is not None
+    assert next_link["href"] == "/bible/NIV/JHN/3"
 
 
-def test_web_chapter_not_found_renders_error(client):
-    resp = client.get("/bible/WEB/GEN/999")
+def test_bible_tap_advance_disabled_keeps_footer_chapter_buttons(client):
+    fake_data = {"data": {"content": "<p>John text</p>", "fums_url": None}}
+    with patch.object(bible_routes, "fetch_bible_chapter", return_value=fake_data):
+        resp = client.get("/bible/NIV/JHN/2")
+    soup = BeautifulSoup(resp.data, "html.parser")
+
+    assert soup.select_one("#tap-overlay-top") is None
+    prev_link = soup.find("a", string="<")
+    next_link = soup.find("a", string=">")
+    assert prev_link is not None
+    assert prev_link["href"] == "/bible/NIV/JHN/1"
+    assert next_link is not None
+    assert next_link["href"] == "/bible/NIV/JHN/3"
+
+
+def test_web_translation_is_not_available(client):
+    resp = client.get("/bible/WEB/GEN/1")
     assert resp.status_code == 404
-    assert b"not found" in resp.data
+    assert b"Unknown translation" in resp.data
 
 
 def test_api_bible_chapter_renders(client):
     fake_data = {"data": {"content": "<p>For God so loved the world</p>", "fums_url": None}}
     with patch.object(bible_routes, "fetch_bible_chapter", return_value=fake_data):
-        with patch.object(bible_routes, "bible_api_available", return_value=True):
-            resp = client.get("/bible/NIV/JHN/3")
+        resp = client.get("/bible/NIV/JHN/3")
     assert resp.status_code == 200
     assert b"For God so loved the world" in resp.data
 
@@ -153,15 +187,16 @@ def test_api_bible_fetch_omits_verse_numbers(client):
             bible_api.fetch_bible_chapter("NIV", "JHN", 3)
 
     _, kwargs = mock_get.call_args
+    assert kwargs["params"]["content-type"] == "html"
     assert kwargs["params"]["include-verse-numbers"] == "false"
+    assert kwargs["params"]["include-notes"] == "true"
 
 
 def test_api_bible_error_renders_error_page(client):
     from app.shared import ReadwiseAPIError
 
     with patch.object(bible_routes, "fetch_bible_chapter", side_effect=ReadwiseAPIError("API fail")):
-        with patch.object(bible_routes, "bible_api_available", return_value=True):
-            resp = client.get("/bible/NIV/JHN/3")
+        resp = client.get("/bible/NIV/JHN/3")
     assert b"API fail" in resp.data
 
 
@@ -170,14 +205,14 @@ def test_api_bible_network_error_renders_error(client):
     from app.shared import ReadwiseAPIError
 
     with patch.object(bible_routes, "fetch_bible_chapter", side_effect=ReadwiseAPIError("network fail")):
-        with patch.object(bible_routes, "bible_api_available", return_value=True):
-            resp = client.get("/bible/NIV/JHN/3")
+        resp = client.get("/bible/NIV/JHN/3")
     assert resp.status_code == 502
     assert b"network fail" in resp.data
 
 
-def test_navigator_only_shows_web_without_api_key(client):
-    with patch.object(bible_routes, "bible_api_available", return_value=False):
-        resp = client.get("/bible/")
-    assert b"WEB" in resp.data
-    assert b"NIV" not in resp.data
+def test_navigator_shows_only_api_translations_without_api_key(client):
+    resp = client.get("/bible/")
+    assert b"WEB" not in resp.data
+    assert b"NIV" in resp.data
+    assert b"NLT" in resp.data
+    assert b"MSG" in resp.data

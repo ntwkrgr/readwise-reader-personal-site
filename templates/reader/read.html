@@ -120,17 +120,12 @@
 {% endif %}
 
 {% if tap_advance_enabled and has_content %}
-<div class="tap-overlay tap-overlay-top" id="tap-overlay-top"></div>
-<div class="tap-overlay tap-overlay-bottom" id="tap-overlay-bottom"></div>
 <script>
 (function() {
     var articleEl = document.getElementById('article-content');
     if (!articleEl) return;
-    var topOv = document.getElementById('tap-overlay-top');
-    var botOv = document.getElementById('tap-overlay-bottom');
     var OVERLAP = 80;          // px of the previous screen kept visible
     var TAP_THRESHOLD = 10;    // px movement still counts as a tap, not a swipe
-    var EDGE_HIDE = 40;        // hide overlay when this close to page top/bottom
     var startX = null;
     var startY = null;
     var handledTouch = false;
@@ -184,22 +179,12 @@
         if (maxScroll <= 0) return;            // whole article fits on one screen
         if (current >= maxScroll - 2) return;  // already at the bottom
         window.scrollBy(0, stepAmount());
-        updateOverlays();
     }
 
     function goBack() {
         var current = getScrollY();
         if (current <= 0) return;
         window.scrollBy(0, -stepAmount());
-        updateOverlays();
-    }
-
-    function updateOverlays() {
-        if (!topOv || !botOv) return;
-        var current = getScrollY();
-        var maxScroll = getPageHeight() - getViewportH();
-        topOv.style.display = (current > EDGE_HIDE) ? 'block' : 'none';
-        botOv.style.display = (maxScroll > 0 && current < maxScroll - EDGE_HIDE) ? 'block' : 'none';
     }
 
     function handleTap(target, clientX) {
@@ -247,8 +232,6 @@
         handleTap(e.target, e.clientX);
     }, false);
 
-    window.addEventListener('scroll', updateOverlays, false);
-    updateOverlays();
 })();
 </script>
 {% endif %}

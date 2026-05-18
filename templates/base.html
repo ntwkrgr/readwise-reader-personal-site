@@ -308,29 +308,6 @@
             background: #fff;
             color: #000;
         }
-        .tap-overlay {
-            position: fixed;
-            left: 0;
-            right: 0;
-            height: 44px;
-            pointer-events: none;
-            z-index: 100;
-            display: none;
-        }
-        .tap-overlay-top {
-            top: 0;
-            background: linear-gradient(to bottom, #fff 0%, #fff 60%, rgba(255, 255, 255, 0) 100%);
-        }
-        .tap-overlay-bottom {
-            bottom: 0;
-            background: linear-gradient(to top, #fff 0%, #fff 60%, rgba(255, 255, 255, 0) 100%);
-        }
-        body.theme-dark .tap-overlay-top {
-            background: linear-gradient(to bottom, #000 0%, #000 60%, rgba(0, 0, 0, 0) 100%);
-        }
-        body.theme-dark .tap-overlay-bottom {
-            background: linear-gradient(to top, #000 0%, #000 60%, rgba(0, 0, 0, 0) 100%);
-        }
     </style>
     {% block styles %}{% endblock %}
 </head>

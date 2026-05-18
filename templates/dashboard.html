@@ -5,7 +5,6 @@
 {% block styles %}
 <style>
     .dashboard-title {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
         font-size: 28px;
         line-height: 1.2;
         font-weight: 700;
@@ -13,7 +12,9 @@
         color: #000;
     }
     .dashboard-menu {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 84px);
         margin: 0;
     }
     .dashboard-link {
@@ -29,6 +30,9 @@
         font-size: 24px;
         line-height: 1.25;
         font-weight: 700;
+    }
+    .dashboard-settings-link {
+        margin-top: auto;
     }
     .theme-dark .dashboard-title {
         color: #fff;
@@ -48,8 +52,8 @@
 {% block content %}
 <main class="dashboard-menu">
     <a class="dashboard-link" href="{{ url_for('reader_bp.article_list') }}">Reader</a>
-    <a class="dashboard-link" href="{{ url_for('highlights_bp.highlights_list') }}">Highlights</a>
+    <a class="dashboard-link" href="{{ url_for('highlights_bp.daily_review') }}">Highlights</a>
     <a class="dashboard-link" href="{{ url_for('bible_bp.navigator') }}">Bible</a>
-    <a class="dashboard-link" href="{{ url_for('settings_bp.settings') }}">Settings</a>
+    <a class="dashboard-link dashboard-settings-link" href="{{ url_for('settings_bp.settings') }}">Settings</a>
 </main>
 {% endblock %}

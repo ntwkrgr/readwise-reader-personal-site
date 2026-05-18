@@ -38,7 +38,8 @@ SAMPLE_BOOKS_DATA = {
 
 SAMPLE_REVIEW_DATA = {
     "highlights": [SAMPLE_HIGHLIGHT],
-    "review_url": "https://readwise.io/review",
+    "review_id": 123,
+    "review_url": "https://readwise.io/reviews/123",
 }
 
 
@@ -55,7 +56,7 @@ def client(tmp_path):
 def test_highlights_list_renders(client):
     with patch.object(highlights_routes, "fetch_highlights", return_value=SAMPLE_HIGHLIGHTS_DATA):
         with patch.object(highlights_routes, "fetch_books", return_value=SAMPLE_BOOKS_DATA):
-            resp = client.get("/highlights/")
+            resp = client.get("/highlights/all")
     assert resp.status_code == 200
     assert b"Great quote from a book" in resp.data
     assert b"Great Book" in resp.data
@@ -67,7 +68,7 @@ def test_highlights_list_api_error_renders_error(client):
 
     with patch.object(highlights_routes, "fetch_highlights", side_effect=ReadwiseAPIError("API down")):
         with patch.object(highlights_routes, "fetch_books", side_effect=ReadwiseAPIError("API down")):
-            resp = client.get("/highlights/")
+            resp = client.get("/highlights/all")
     assert b"API down" in resp.data
 
 
@@ -75,8 +76,20 @@ def test_highlights_list_invalid_page_falls_back(client):
     """?page=abc should not cause 500."""
     with patch.object(highlights_routes, "fetch_highlights", return_value=SAMPLE_HIGHLIGHTS_DATA):
         with patch.object(highlights_routes, "fetch_books", return_value=SAMPLE_BOOKS_DATA):
-            resp = client.get("/highlights/?page=abc")
+            resp = client.get("/highlights/all?page=abc")
     assert resp.status_code == 200
+
+
+def test_highlights_list_renders_previous_and_next_page_buttons(client):
+    paged_data = {**SAMPLE_HIGHLIGHTS_DATA, "next": "next-url"}
+    with patch.object(highlights_routes, "fetch_highlights", return_value=paged_data):
+        with patch.object(highlights_routes, "fetch_books", return_value=SAMPLE_BOOKS_DATA):
+            resp = client.get("/highlights/all?page=2")
+
+    assert b"Previous page" in resp.data
+    assert b"/highlights/all?page=1" in resp.data
+    assert b"Next page" in resp.data
+    assert b"/highlights/all?page=3" in resp.data
 
 
 def test_fetch_books_paginates_and_caches_all_results(client):
@@ -98,12 +111,32 @@ def test_fetch_books_paginates_and_caches_all_results(client):
 def test_daily_review_renders(client):
     with patch.object(highlights_routes, "fetch_daily_review", return_value=SAMPLE_REVIEW_DATA):
         with patch.object(highlights_routes, "fetch_books", return_value=SAMPLE_BOOKS_DATA):
-            resp = client.get("/highlights/review")
+            resp = client.get("/highlights/")
     assert resp.status_code == 200
     assert b"Great quote from a book" in resp.data
     assert b"Great Book" in resp.data
     assert b"Great Author" in resp.data
-    assert b"readwise.io/review" in resp.data
+    assert b"https://readwise.io/reviews/123" in resp.data
+    assert b"All highlights" in resp.data
+
+
+def test_daily_review_builds_review_url_from_id_when_url_missing(client):
+    review_data = {**SAMPLE_REVIEW_DATA, "review_url": None, "review_id": 456}
+    with patch.object(highlights_routes, "fetch_daily_review", return_value=review_data):
+        with patch.object(highlights_routes, "fetch_books", return_value=SAMPLE_BOOKS_DATA):
+            resp = client.get("/highlights/")
+
+    assert b"https://readwise.io/reviews/456" in resp.data
+    assert b'href="https://readwise.io/review"' not in resp.data
+
+
+def test_daily_review_legacy_url_still_renders(client):
+    with patch.object(highlights_routes, "fetch_daily_review", return_value=SAMPLE_REVIEW_DATA):
+        with patch.object(highlights_routes, "fetch_books", return_value=SAMPLE_BOOKS_DATA):
+            resp = client.get("/highlights/review")
+
+    assert resp.status_code == 200
+    assert b"Daily Review" in resp.data
 
 
 def test_daily_review_uses_review_highlight_source_metadata(client):

@@ -1,4 +1,5 @@
 """Integration tests for Flask routes."""
+from pathlib import Path
 import time
 import diskcache
 import pytest
@@ -51,8 +52,43 @@ def test_dashboard_renders_feature_links(client):
     assert resp.status_code == 200
     assert b"Reader" in resp.data
     assert b"Highlights" in resp.data
+    assert b'href="/highlights/"' in resp.data
     assert b"Bible" in resp.data
     assert b"Settings" in resp.data
+
+
+def test_dashboard_places_settings_link_at_bottom(client):
+    resp = client.get("/")
+    html = resp.data.decode()
+
+    assert 'class="dashboard-link dashboard-settings-link"' in html
+    assert "margin-top: auto" in html
+
+
+def test_templates_do_not_force_sans_serif_fonts():
+    template_dir = Path(__file__).resolve().parents[1] / "templates"
+    forbidden = ("sans-serif", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Arial")
+
+    offenders = [
+        str(path.relative_to(template_dir))
+        for path in template_dir.rglob("*.html")
+        if any(term in path.read_text() for term in forbidden)
+    ]
+
+    assert offenders == []
+
+
+def test_templates_do_not_render_tap_fade_overlays():
+    template_dir = Path(__file__).resolve().parents[1] / "templates"
+    forbidden = ("tap-overlay", "linear-gradient")
+
+    offenders = [
+        str(path.relative_to(template_dir))
+        for path in template_dir.rglob("*.html")
+        if any(term in path.read_text() for term in forbidden)
+    ]
+
+    assert offenders == []
 
 
 def test_list_renders_articles(client):
@@ -138,6 +174,16 @@ def test_read_article_strips_images(client):
     assert b"More" in resp.data
 
 
+def test_read_article_tap_advance_has_no_visual_overlay(client):
+    client.set_cookie("readwise_tap_advance", "on")
+
+    with patch.object(routes_module, "fetch_article", return_value=SAMPLE_ARTICLE):
+        resp = client.get("/reader/read/abc123")
+
+    assert b"article-content" in resp.data
+    assert b"tap-overlay" not in resp.data
+
+
 def test_read_article_api_error_renders_error_page(client):
     with patch.object(routes_module, "fetch_article", side_effect=ReadwiseAPIError("Not found")):
         resp = client.get("/reader/read/missing")
@@ -191,6 +237,7 @@ def test_settings_get_renders(client):
     resp = client.get("/settings")
     assert resp.status_code == 200
     assert b"Auto" in resp.data
+    assert b"Back to list" not in resp.data
 
 
 def test_settings_post_sets_cookies_and_redirects(client):

@@ -25,14 +25,18 @@ def fetch_bible_chapter(translation: str, book_id: str, chapter: int) -> dict[st
     bible_id = TRANSLATION_IDS.get(translation)
     if not bible_id:
         raise ReadwiseAPIError(f"Unknown translation: {translation}")
-    key = f"bible:no-verse-numbers:{translation}:{book_id}:{chapter}"
+    key = f"bible:html:no-verse-numbers:with-notes:{translation}:{book_id}:{chapter}"
 
     def _fetch() -> dict[str, Any]:
         try:
             resp = http_requests.get(
                 f"{BIBLE_API_BASE}/bibles/{bible_id}/chapters/{book_id}.{chapter}",
                 headers={"api-key": BIBLE_API_KEY},
-                params={"content-type": "text", "include-verse-numbers": "false"},
+                params={
+                    "content-type": "html",
+                    "include-verse-numbers": "false",
+                    "include-notes": "true",
+                },
                 timeout=15,
             )
         except http_requests.RequestException:

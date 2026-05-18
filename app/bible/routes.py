@@ -3,22 +3,19 @@ from flask import make_response, redirect, render_template, request, url_for
 from app.bible import bible_bp
 from app.bible.api import TRANSLATION_IDS
 from app.bible.api import fetch_bible_chapter
-from app.bible.api import is_available as bible_api_available
-from app.bible.web_data import chapter_count, get_books, get_chapter
+from app.bible.web_data import chapter_count, get_books
 from app.shared import ReadwiseAPIError
 
 BIBLE_POSITION_COOKIE = "bible_last"
 
 
 def _all_translations() -> list[str]:
-    translations = ["WEB"]
-    if bible_api_available():
-        translations.extend(TRANSLATION_IDS.keys())
-    return translations
+    return list(TRANSLATION_IDS.keys())
 
 
 @bible_bp.route("/")
 def navigator() -> str:
+    translations = _all_translations()
     last = request.cookies.get(BIBLE_POSITION_COOKIE, "")
     if last and not request.args:
         parts = last.split("/")
@@ -26,17 +23,20 @@ def navigator() -> str:
             translation, book_id, raw_chapter = parts
             try:
                 chapter_num = int(raw_chapter)
-                return redirect(url_for(
-                    "bible_bp.read_chapter",
-                    translation=translation,
-                    book_id=book_id,
-                    chapter_num=chapter_num,
-                ))
+                if translation in translations:
+                    return redirect(url_for(
+                        "bible_bp.read_chapter",
+                        translation=translation,
+                        book_id=book_id,
+                        chapter_num=chapter_num,
+                    ))
             except ValueError:
                 pass
 
     books = get_books()
-    selected_translation = request.args.get("translation", "WEB")
+    selected_translation = request.args.get("translation", translations[0])
+    if selected_translation not in translations:
+        selected_translation = translations[0]
     selected_book = request.args.get("book", books[0]["id"] if books else "GEN")
     total_chapters = chapter_count(selected_book)
     selected_chapter = request.args.get("chapter", "1")
@@ -48,7 +48,7 @@ def navigator() -> str:
     book_chapter_counts = {b["id"]: b["chapter_count"] for b in books}
     return render_template(
         "bible/navigator.html",
-        translations=_all_translations(),
+        translations=translations,
         books=books,
         selected_translation=selected_translation,
         selected_book=selected_book,
@@ -68,25 +68,23 @@ def read_chapter(translation: str, book_id: str, chapter_num: int) -> str:
     total_chapters = chapter_count(book_id)
     book_chapter_counts = {b["id"]: b["chapter_count"] for b in books}
 
-    if translation == "WEB":
-        verses = get_chapter(book_id, chapter_num)
-        if verses is None:
-            return render_template(
-                "error.html",
-                message=f"{book_name} chapter {chapter_num} not found.",
-                retry_url=url_for("bible_bp.navigator"),
-            ), 404
-    else:
-        try:
-            data = fetch_bible_chapter(translation, book_id, chapter_num)
-            content_html = data.get("data", {}).get("content", "")
-            fums_url = data.get("data", {}).get("fums_url")
-        except ReadwiseAPIError as e:
-            return render_template(
-                "error.html",
-                message=str(e),
-                retry_url=url_for("bible_bp.navigator"),
-            ), 502
+    if translation not in TRANSLATION_IDS:
+        return render_template(
+            "error.html",
+            message=f"Unknown translation: {translation}",
+            retry_url=url_for("bible_bp.navigator"),
+        ), 404
+
+    try:
+        data = fetch_bible_chapter(translation, book_id, chapter_num)
+        content_html = data.get("data", {}).get("content", "")
+        fums_url = data.get("data", {}).get("fums_url")
+    except ReadwiseAPIError as e:
+        return render_template(
+            "error.html",
+            message=str(e),
+            retry_url=url_for("bible_bp.navigator"),
+        ), 502
 
     resp = make_response(render_template(
         "bible/chapter.html",
