@@ -208,6 +208,22 @@
             min-height: 48px;
             border: 2px solid #000;
         }
+        #page-indicator {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            padding: 4px 10px;
+            font-size: 13px;
+            font-family: Georgia, "Times New Roman", serif;
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+            border-radius: 6px;
+            z-index: 10;
+        }
+        #article-content.highlight-mode-active ~ #page-indicator {
+            display: none !important;
+        }
         body.theme-dark {
             background: #000;
             color: #fff;
@@ -260,6 +276,11 @@
         body.theme-dark .tag-filter { border-bottom-color: #fff; }
         body.theme-dark .empty { color: #fff; }
         body.theme-dark .no-content a { border-color: #fff; color: #fff; }
+        body.theme-dark #page-indicator {
+            background: #000;
+            color: #fff;
+            border-color: #fff;
+        }
         body.theme-dark article blockquote { border-left-color: #fff; }
         body.theme-dark article pre,
         body.theme-dark article th,

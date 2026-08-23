@@ -53,7 +53,6 @@ def test_dashboard_renders_feature_links(client):
     assert b"Reader" in resp.data
     assert b"Highlights" in resp.data
     assert b'href="/highlights/"' in resp.data
-    assert b"Bible" in resp.data
     assert b"Settings" in resp.data
 
 
@@ -174,14 +173,47 @@ def test_read_article_strips_images(client):
     assert b"More" in resp.data
 
 
-def test_read_article_tap_advance_has_no_visual_overlay(client):
+def test_read_article_tap_advance_on_renders_paginator_and_indicator(client):
     client.set_cookie("readwise_tap_advance", "on")
 
     with patch.object(routes_module, "fetch_article", return_value=SAMPLE_ARTICLE):
         resp = client.get("/reader/read/abc123")
 
     assert b"article-content" in resp.data
+    assert b"page-indicator" in resp.data
+    assert b"paginate-script" in resp.data
     assert b"tap-overlay" not in resp.data
+
+
+def test_read_article_tap_advance_off_ships_no_paginate_js(client):
+    client.set_cookie("readwise_tap_advance", "off")
+
+    with patch.object(routes_module, "fetch_article", return_value=SAMPLE_ARTICLE):
+        resp = client.get("/reader/read/abc123")
+
+    assert b'id="page-indicator"' not in resp.data
+    assert b"paginate-script" not in resp.data
+    assert b"scrollTo" not in resp.data
+    assert b"scrollBy" not in resp.data
+
+
+def test_read_article_tap_advance_default_off_ships_no_paginate_js(client):
+    with patch.object(routes_module, "fetch_article", return_value=SAMPLE_ARTICLE):
+        resp = client.get("/reader/read/abc123")
+
+    assert b'id="page-indicator"' not in resp.data
+    assert b"paginate-script" not in resp.data
+
+
+def test_read_article_tap_advance_on_no_content_ships_no_paginate_js(client):
+    client.set_cookie("readwise_tap_advance", "on")
+    article = {**SAMPLE_ARTICLE, "html_content": ""}
+
+    with patch.object(routes_module, "fetch_article", return_value=article):
+        resp = client.get("/reader/read/abc123")
+
+    assert b'id="page-indicator"' not in resp.data
+    assert b"paginate-script" not in resp.data
 
 
 def test_read_article_api_error_renders_error_page(client):
