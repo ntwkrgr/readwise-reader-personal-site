@@ -46,14 +46,14 @@
         }
         .nav-group a {
             display: block;
-            padding: 12px 20px;
-            min-height: 48px;
+            padding: 6px 14px;
+            min-height: 36px;
             text-decoration: none;
             border: none;
             border-right: 2px solid #000;
             border-radius: 0;
-            font-size: 16px;
-            line-height: 24px;
+            font-size: 14px;
+            line-height: 20px;
             text-align: center;
         }
         .nav-group a:last-child {
@@ -65,34 +65,76 @@
         }
         .nav-settings {
             display: block;
-            padding: 12px 20px;
-            min-height: 48px;
+            padding: 6px 14px;
+            min-height: 36px;
             text-decoration: none;
             border: 2px solid #000;
             border-radius: 8px;
-            font-size: 16px;
-            line-height: 24px;
+            font-size: 14px;
+            line-height: 20px;
             text-align: center;
             margin-left: auto;
         }
         .btn {
             display: inline-block;
-            padding: 12px 24px;
-            min-height: 48px;
+            padding: 6px 14px;
+            min-height: 36px;
             border: 2px solid #000;
             border-radius: 8px;
             background: #fff;
             color: #000;
             font-family: Georgia, "Times New Roman", serif;
-            font-size: 16px;
+            font-size: 14px;
             text-decoration: none;
             cursor: pointer;
-            line-height: 24px;
+            line-height: 20px;
             text-align: center;
         }
         .btn-dark {
             background: #000;
             color: #fff;
+        }
+        .reader-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: nowrap;
+            padding: 6px 8px;
+            background: #fff;
+            border-top: 2px solid #000;
+        }
+        .reader-bar > *,
+        .reader-bar form {
+            margin: 0 3px;
+        }
+        .reader-bar .btn {
+            padding: 6px 10px;
+        }
+        .reader-bar .btn svg {
+            display: block;
+            width: 20px;
+            height: 20px;
+        }
+        /* Icon fallback: delete this rule to show words beside the icons. */
+        .reader-bar .btn-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        body.theme-dark .reader-bar {
+            background: #000;
+            border-top-color: #fff;
         }
         .toolbar {
             display: flex;
@@ -204,8 +246,10 @@
         .no-content a {
             display: inline-block;
             margin-top: 16px;
-            padding: 12px 24px;
-            min-height: 48px;
+            padding: 6px 14px;
+            min-height: 36px;
+            font-size: 14px;
+            line-height: 20px;
             border: 2px solid #000;
         }
         #page-indicator {

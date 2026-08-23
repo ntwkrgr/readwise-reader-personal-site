@@ -47,6 +47,7 @@ uv run pytest
 - `ReadwiseAPIError` (`app/shared.py`) is the single error type every blueprint raises and every route catches into `templates/error.html`.
 - Client-side JS must stay ES2015 / Chrome 75-compatible — the target browser is the Kindle Scribe's built-in browser.
 - Tap-to-advance pagination (`templates/reader/_paginate.html`) measures real line-box positions from the rendered DOM to compute page boundaries — it's coupled to the reading-view CSS in `templates/base.html` (font, line-height, `article` element rules). Changing that CSS can shift where pages break; re-check pagination on-device after reading-view CSS changes.
+- The reading view (`templates/reader/read.html`) has a single `#reader-bar` fixed to the bottom of the screen (not an in-flow `.toolbar` like other pages). Pagination measures its live height via `getBoundingClientRect()` each time it recomputes, subtracts that from the usable page height, and writes it back into `body`'s `padding-bottom` and the page indicator's `bottom` offset — so a taller bar (e.g. wrapped buttons at large text sizes) is accounted for automatically. Don't reintroduce a `.toolbar` measurement in `collectBoxes()`; the bar's own height computation replaces it.
 - No linter, formatter, or CI is configured for this project.
 
 ## Common commands
