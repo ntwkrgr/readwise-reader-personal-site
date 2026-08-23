@@ -35,8 +35,12 @@ Tests use pytest via `uv run pytest`; see Testing below for one-time setup.
 ```bash
 uv venv
 uv pip install -r requirements.txt -r requirements-dev.txt
+uv run playwright install chromium  # one-time; needed by tests/test_pagination_browser.py
 uv run pytest
 ```
+
+`tests/test_pagination_browser.py` renders the reading view in headless Chromium and asserts
+no line ever straddles a computed page boundary. It skips cleanly if Chromium isn't installed.
 
 ## Gotchas
 
@@ -46,7 +50,8 @@ uv run pytest
 - Gunicorn runs 2 workers; `app/cache.py` uses a `diskcache.Lock` (expire=30) so concurrent workers don't duplicate API calls.
 - `ReadwiseAPIError` (`app/shared.py`) is the single error type every blueprint raises and every route catches into `templates/error.html`.
 - Client-side JS must stay ES2015 / Chrome 75-compatible — the target browser is the Kindle Scribe's built-in browser.
-- Tap-to-advance pagination (`templates/reader/_paginate.html`) measures real line-box positions from the rendered DOM to compute page boundaries — it's coupled to the reading-view CSS in `templates/base.html` (font, line-height, `article` element rules). Changing that CSS can shift where pages break; re-check pagination on-device after reading-view CSS changes.
+- Tap-to-advance pagination (`templates/reader/_paginate.html`) measures real block-element positions from the rendered DOM to compute page boundaries — it's coupled to the reading-view CSS in `templates/base.html` (font, line-height, `article` element rules). Changing that CSS can shift where pages break; re-run `tests/test_pagination_browser.py` and re-check pagination on-device after reading-view CSS changes.
+- Scrolling to a computed page start does **not** stop the browser from painting a full viewport's worth of content from that point — a naive "jump to the first overflowing line's top" approach still lets that line bleed onto the previous page, because the previous page's viewport paints past the intended boundary regardless. `_paginate.html` avoids this by moving whole block-level elements (`ATOM_TAGS`: p, li, headings, blockquote, pre, table, hr) past the boundary via an inserted blank spacer when they'd straddle it, rather than splitting mid-element.
 - No linter, formatter, or CI is configured for this project.
 
 ## Common commands

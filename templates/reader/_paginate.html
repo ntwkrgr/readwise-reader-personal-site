@@ -5,10 +5,17 @@
     if (!articleEl) return;
 
     var TAP_THRESHOLD = 10;       // px movement still counts as a tap, not a swipe
-    var EDGE_PAD = 4;             // px absorbed from the viewport for subpixel rounding
-    var MIN_ADVANCE = 40;         // px; guards against a zero/negative-length page
+    var EDGE_PAD = 4;             // px subpixel-rounding safety margin (not an anti-bleed mechanism)
+    var MIN_ADVANCE = 40;         // px; guards a single atom taller than one page
     var RESIZE_DEBOUNCE = 250;    // ms
     var MAX_CONTENT_CHARS = 200000; // guard rail: skip measurement past this length
+
+    // Block-level tags moved as a single unit when they'd straddle a page boundary.
+    // TABLE and HR can't take a spacer as a child (TABLE's content model rejects a
+    // bare DIV; HR is a void element), so they get a spacer inserted as a preceding
+    // sibling instead - see insertSpacerBefore().
+    var ATOM_TAGS = ['P', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'PRE', 'TABLE', 'HR'];
+    var SIBLING_INSERT_TAGS = { HR: true, TABLE: true };
 
     var starts = [0];
     var currentIndex = 0;
@@ -17,15 +24,15 @@
     var startY = null;
     var handledTouch = false;
     var resizeTimer = null;
-    var spacerEl = null;
+    var insertedSpacers = [];
     var indicatorEl = document.getElementById('page-indicator');
 
     function getViewportH() {
-        return window.innerHeight || document.documentElement.clientHeight || 600;
+        return document.documentElement.clientHeight || window.innerHeight || 600;
     }
 
     function getViewportW() {
-        return window.innerWidth || document.documentElement.clientWidth || 800;
+        return document.documentElement.clientWidth || window.innerWidth || 800;
     }
 
     function getScrollY() {
@@ -57,14 +64,32 @@
     }
 
     // --- Boundary measurement -------------------------------------------
+    //
+    // Scrolling to a computed "page start" doesn't stop the browser from painting
+    // a full viewport's worth of content from that point on - it always renders
+    // [scrollY, scrollY + viewportHeight). So a line sitting just above a page
+    // boundary is *already* partially visible on the previous page before you even
+    // tap to advance; no amount of tweaking which line's top becomes the next
+    // page's scroll target fixes that; the content physically bleeds through.
+    //
+    // The only way to keep a boundary clean is to physically relocate whatever
+    // content would straddle it, by inserting blank spacer height right before it
+    // (see insertSpacerBefore/computeStarts below) - the same technique already
+    // used for the trailing spacer at the end of the document, just applied at
+    // every internal boundary too. To keep that relocation simple and safe (no
+    // text-node splitting), the unit that gets moved is a whole block-level
+    // element (a paragraph, heading, list item, etc - see ATOM_TAGS), not an
+    // individual wrapped line.
 
-    function collectBoxes() {
-        var boxes = [];
+    function collectAtoms() {
+        var atoms = [];
         var scrollY = getScrollY();
+        var seenTextParents = [];
 
-        function pushRect(rect) {
+        function pushAtom(node) {
+            var rect = node.getBoundingClientRect();
             if (!rect || rect.height <= 0) return;
-            boxes.push({ top: rect.top + scrollY, bottom: rect.bottom + scrollY });
+            atoms.push({ top: rect.top + scrollY, bottom: rect.bottom + scrollY, node: node });
         }
 
         var walker = document.createTreeWalker(
@@ -73,9 +98,8 @@
             {
                 acceptNode: function(node) {
                     if (node.nodeType === 1) {
-                        var tag = node.tagName;
-                        if (tag === 'PRE' || tag === 'TABLE') {
-                            pushRect(node.getBoundingClientRect());
+                        if (ATOM_TAGS.indexOf(node.tagName) !== -1) {
+                            pushAtom(node);
                             return NodeFilter.FILTER_REJECT;
                         }
                         return NodeFilter.FILTER_SKIP;
@@ -89,75 +113,112 @@
             false
         );
 
-        var range = document.createRange();
         var node;
         while ((node = walker.nextNode())) {
-            range.selectNodeContents(node);
-            var rects = range.getClientRects();
-            for (var i = 0; i < rects.length; i++) {
-                pushRect(rects[i]);
+            // Loose text directly inside a non-atom wrapper (rare for sanitized
+            // article HTML, but not impossible) - treat its parent as the atom.
+            var parent = node.parentElement || articleEl;
+            if (seenTextParents.indexOf(parent) === -1) {
+                seenTextParents.push(parent);
+                pushAtom(parent);
             }
         }
 
         var toolbars = articleEl.parentNode.querySelectorAll('.toolbar');
         if (toolbars.length > 0) {
-            pushRect(toolbars[toolbars.length - 1].getBoundingClientRect());
+            pushAtom(toolbars[toolbars.length - 1]);
         }
 
-        boxes.sort(function(a, b) { return a.top - b.top; });
-        return boxes;
+        atoms.sort(function(a, b) { return a.top - b.top; });
+        return atoms;
     }
 
-    function removeSpacer() {
-        if (spacerEl && spacerEl.parentNode) {
-            spacerEl.parentNode.removeChild(spacerEl);
+    function removeAllSpacers() {
+        for (var i = 0; i < insertedSpacers.length; i++) {
+            var el = insertedSpacers[i];
+            if (el.parentNode) el.parentNode.removeChild(el);
         }
-        spacerEl = null;
+        insertedSpacers = [];
     }
 
-    function addSpacer(height) {
+    function makeSpacer(height) {
+        var spacer = document.createElement('div');
+        spacer.setAttribute('aria-hidden', 'true');
+        spacer.style.height = height + 'px';
+        return spacer;
+    }
+
+    // Pushes `atomNode` down by `height` px so it starts exactly at the page
+    // boundary instead of straddling it. Inserted as a preceding sibling for
+    // TABLE/HR (whose content model can't take a block child); as a first child
+    // otherwise, so the atom's own box stays put and its content is shifted down
+    // within it - avoiding any DOM-validity issues with the atom's parent (e.g. an
+    // LI's parent UL doesn't accept a bare DIV sibling between list items).
+    function insertSpacerBefore(atomNode, height) {
+        var spacer = makeSpacer(height);
+        if (SIBLING_INSERT_TAGS[atomNode.tagName]) {
+            atomNode.parentNode.insertBefore(spacer, atomNode);
+        } else {
+            atomNode.insertBefore(spacer, atomNode.firstChild);
+        }
+        insertedSpacers.push(spacer);
+    }
+
+    function appendTailSpacer(height) {
         if (height <= 0) return;
-        spacerEl = document.createElement('div');
-        spacerEl.setAttribute('aria-hidden', 'true');
-        spacerEl.style.height = height + 'px';
-        document.body.appendChild(spacerEl);
+        var spacer = makeSpacer(height);
+        document.body.appendChild(spacer);
+        insertedSpacers.push(spacer);
     }
 
     function computeStarts() {
-        removeSpacer();
+        removeAllSpacers();
 
-        var pageH = getViewportH() - EDGE_PAD;
-        if (pageH < MIN_ADVANCE) pageH = MIN_ADVANCE;
+        // viewportH is the real, un-shrunk boundary: nothing may cross it, because
+        // scrolling to `cur` always paints [cur, cur + viewportH), whatever is
+        // there. EDGE_PAD is only a landing buffer for a relocated atom - it must
+        // clear the real edge, so it lands a few px *past* viewportH, never short
+        // of it (landing short is exactly the bleed this fix removes).
+        var viewportH = getViewportH();
+        var minPageH = MIN_ADVANCE;
 
-        var boxes = collectBoxes();
+        var atoms = collectAtoms();
         var result = [0];
         var cur = 0;
-        var searchFrom = 0; // boxes are sorted by top and limits only grow, so this never rewinds
+        var shift = 0; // cumulative height inserted by spacers so far
 
-        for (;;) {
-            var limit = cur + pageH;
-            var next = null;
-            var i;
-            for (i = searchFrom; i < boxes.length; i++) {
-                if (boxes[i].bottom > limit + 0.5) {
-                    next = boxes[i];
-                    break;
-                }
+        for (var i = 0; i < atoms.length; i++) {
+            var top = atoms[i].top + shift;
+            var bottom = atoms[i].bottom + shift;
+            var limit = cur + Math.max(viewportH, minPageH);
+            if (bottom <= limit + 0.5) continue; // fits fully on the current page
+
+            var landing = limit + EDGE_PAD;
+            if (top <= cur + MIN_ADVANCE + 0.5) {
+                // This atom is already at the start of the page and alone is
+                // taller than one page (e.g. a huge table). No spacer can help -
+                // accept a hard cut rather than an infinite loop or a zero-height
+                // page. Rare/pathological; matches the previous safety net.
+                top = limit;
+            } else if (top < landing) {
+                // Straddles (or lands too close to) the boundary - relocate it
+                // to start just past the real edge.
+                var need = landing - top;
+                insertSpacerBefore(atoms[i].node, need);
+                shift += need;
+                top = landing;
             }
-            if (!next) break;
-            searchFrom = i;
-            var top = next.top;
-            if (top <= cur + MIN_ADVANCE) {
-                top = cur + pageH;
-            }
+            // else: top already >= landing - a natural gap (margin) already
+            // clears the boundary with room to spare, so this atom can simply
+            // start the next page as-is.
+
             result.push(top);
             cur = top;
         }
 
         var docHeight = getDocHeight();
         var lastStart = result[result.length - 1];
-        var needed = (lastStart + pageH) - docHeight;
-        addSpacer(needed);
+        appendTailSpacer((lastStart + viewportH) - docHeight);
 
         return result;
     }
@@ -214,7 +275,6 @@
     }
 
     function recompute() {
-        var y = getScrollY();
         starts = computeStarts();
         syncCurrentIndexFromScroll();
         // Re-snap to the boundary nearest the pre-recompute scroll position.
@@ -286,5 +346,15 @@
     } else {
         document.addEventListener('DOMContentLoaded', init);
     }
+
+    // Read-only inspection hook for the automated pagination test
+    // (tests/test_pagination_browser.py). Not used by any runtime behavior.
+    window.__readerPaginationDebug = {
+        getStarts: function() { return starts.slice(); },
+        getPageH: function() {
+            return Math.max(getViewportH(), MIN_ADVANCE);
+        },
+        collectAtoms: collectAtoms
+    };
 })();
 </script>
