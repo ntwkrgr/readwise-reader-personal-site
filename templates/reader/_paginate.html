@@ -1,0 +1,290 @@
+<div id="page-indicator" style="display:none"></div>
+<script data-role="paginate-script">
+(function() {
+    var articleEl = document.getElementById('article-content');
+    if (!articleEl) return;
+
+    var TAP_THRESHOLD = 10;       // px movement still counts as a tap, not a swipe
+    var EDGE_PAD = 4;             // px absorbed from the viewport for subpixel rounding
+    var MIN_ADVANCE = 40;         // px; guards against a zero/negative-length page
+    var RESIZE_DEBOUNCE = 250;    // ms
+    var MAX_CONTENT_CHARS = 200000; // guard rail: skip measurement past this length
+
+    var starts = [0];
+    var currentIndex = 0;
+    var paginationEnabled = true;
+    var startX = null;
+    var startY = null;
+    var handledTouch = false;
+    var resizeTimer = null;
+    var spacerEl = null;
+    var indicatorEl = document.getElementById('page-indicator');
+
+    function getViewportH() {
+        return window.innerHeight || document.documentElement.clientHeight || 600;
+    }
+
+    function getViewportW() {
+        return window.innerWidth || document.documentElement.clientWidth || 800;
+    }
+
+    function getScrollY() {
+        var y = window.pageYOffset;
+        if (typeof y !== 'number') {
+            y = document.documentElement.scrollTop || document.body.scrollTop || 0;
+        }
+        return y;
+    }
+
+    function getDocHeight() {
+        return Math.max(
+            document.body.scrollHeight || 0,
+            document.documentElement.scrollHeight || 0
+        );
+    }
+
+    function isInLink(target) {
+        var t = target;
+        while (t && t !== articleEl) {
+            if (t.tagName === 'A') return true;
+            t = t.parentNode;
+        }
+        return false;
+    }
+
+    function isHighlightModeActive() {
+        return articleEl.classList.contains('highlight-mode-active');
+    }
+
+    // --- Boundary measurement -------------------------------------------
+
+    function collectBoxes() {
+        var boxes = [];
+        var scrollY = getScrollY();
+
+        function pushRect(rect) {
+            if (!rect || rect.height <= 0) return;
+            boxes.push({ top: rect.top + scrollY, bottom: rect.bottom + scrollY });
+        }
+
+        var walker = document.createTreeWalker(
+            articleEl,
+            NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+            {
+                acceptNode: function(node) {
+                    if (node.nodeType === 1) {
+                        var tag = node.tagName;
+                        if (tag === 'PRE' || tag === 'TABLE') {
+                            pushRect(node.getBoundingClientRect());
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_SKIP;
+                    }
+                    if (!node.nodeValue || !/\S/.test(node.nodeValue)) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            },
+            false
+        );
+
+        var range = document.createRange();
+        var node;
+        while ((node = walker.nextNode())) {
+            range.selectNodeContents(node);
+            var rects = range.getClientRects();
+            for (var i = 0; i < rects.length; i++) {
+                pushRect(rects[i]);
+            }
+        }
+
+        var toolbars = articleEl.parentNode.querySelectorAll('.toolbar');
+        if (toolbars.length > 0) {
+            pushRect(toolbars[toolbars.length - 1].getBoundingClientRect());
+        }
+
+        boxes.sort(function(a, b) { return a.top - b.top; });
+        return boxes;
+    }
+
+    function removeSpacer() {
+        if (spacerEl && spacerEl.parentNode) {
+            spacerEl.parentNode.removeChild(spacerEl);
+        }
+        spacerEl = null;
+    }
+
+    function addSpacer(height) {
+        if (height <= 0) return;
+        spacerEl = document.createElement('div');
+        spacerEl.setAttribute('aria-hidden', 'true');
+        spacerEl.style.height = height + 'px';
+        document.body.appendChild(spacerEl);
+    }
+
+    function computeStarts() {
+        removeSpacer();
+
+        var pageH = getViewportH() - EDGE_PAD;
+        if (pageH < MIN_ADVANCE) pageH = MIN_ADVANCE;
+
+        var boxes = collectBoxes();
+        var result = [0];
+        var cur = 0;
+        var searchFrom = 0; // boxes are sorted by top and limits only grow, so this never rewinds
+
+        for (;;) {
+            var limit = cur + pageH;
+            var next = null;
+            var i;
+            for (i = searchFrom; i < boxes.length; i++) {
+                if (boxes[i].bottom > limit + 0.5) {
+                    next = boxes[i];
+                    break;
+                }
+            }
+            if (!next) break;
+            searchFrom = i;
+            var top = next.top;
+            if (top <= cur + MIN_ADVANCE) {
+                top = cur + pageH;
+            }
+            result.push(top);
+            cur = top;
+        }
+
+        var docHeight = getDocHeight();
+        var lastStart = result[result.length - 1];
+        var needed = (lastStart + pageH) - docHeight;
+        addSpacer(needed);
+
+        return result;
+    }
+
+    function updateIndicator() {
+        if (!indicatorEl) return;
+        if (!paginationEnabled || starts.length <= 1 || isHighlightModeActive()) {
+            indicatorEl.style.display = 'none';
+            return;
+        }
+        indicatorEl.style.display = 'block';
+        indicatorEl.textContent = (currentIndex + 1) + ' / ' + starts.length;
+    }
+
+    function syncCurrentIndexFromScroll() {
+        var y = getScrollY();
+        var best = 0;
+        var bestDelta = Infinity;
+        for (var i = 0; i < starts.length; i++) {
+            var delta = Math.abs(starts[i] - y);
+            if (delta < bestDelta) {
+                bestDelta = delta;
+                best = i;
+            }
+        }
+        currentIndex = best;
+    }
+
+    function goToIndex(index) {
+        if (index < 0) index = 0;
+        if (index > starts.length - 1) index = starts.length - 1;
+        currentIndex = index;
+        window.scrollTo(0, starts[currentIndex]);
+        updateIndicator();
+    }
+
+    function goForward() {
+        syncCurrentIndexFromScroll();
+        goToIndex(currentIndex + 1);
+    }
+
+    function goBack() {
+        syncCurrentIndexFromScroll();
+        goToIndex(currentIndex - 1);
+    }
+
+    function handleTap(target, clientX) {
+        if (isInLink(target)) return;
+        if (clientX < getViewportW() / 2) {
+            goBack();
+        } else {
+            goForward();
+        }
+    }
+
+    function recompute() {
+        var y = getScrollY();
+        starts = computeStarts();
+        syncCurrentIndexFromScroll();
+        // Re-snap to the boundary nearest the pre-recompute scroll position.
+        window.scrollTo(0, starts[currentIndex]);
+        updateIndicator();
+    }
+
+    function init() {
+        if (articleEl.textContent && articleEl.textContent.length > MAX_CONTENT_CHARS) {
+            paginationEnabled = false;
+            if (indicatorEl) indicatorEl.style.display = 'none';
+            return;
+        }
+        starts = computeStarts();
+        syncCurrentIndexFromScroll();
+        updateIndicator();
+    }
+
+    articleEl.addEventListener('touchstart', function(e) {
+        if (e.touches && e.touches.length === 1) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        } else {
+            startX = null;
+            startY = null;
+        }
+    }, false);
+
+    articleEl.addEventListener('touchend', function(e) {
+        if (!paginationEnabled || isHighlightModeActive()) {
+            startX = null;
+            startY = null;
+            return;
+        }
+        if (startY === null) return;
+        var t = e.changedTouches && e.changedTouches[0];
+        var sx = startX, sy = startY;
+        startX = null;
+        startY = null;
+        if (!t) return;
+        var dx = Math.abs(t.clientX - sx);
+        var dy = Math.abs(t.clientY - sy);
+        if (dx > TAP_THRESHOLD || dy > TAP_THRESHOLD) return; // swipe/scroll, not a tap
+        handledTouch = true;
+        handleTap(e.target, t.clientX);
+        setTimeout(function() { handledTouch = false; }, 500);
+    }, false);
+
+    articleEl.addEventListener('click', function(e) {
+        if (!paginationEnabled || isHighlightModeActive()) return;
+        if (handledTouch) return;
+        handleTap(e.target, e.clientX);
+    }, false);
+
+    window.addEventListener('resize', function() {
+        if (!paginationEnabled) return;
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(recompute, RESIZE_DEBOUNCE);
+    }, false);
+
+    window.addEventListener('orientationchange', function() {
+        if (!paginationEnabled) return;
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(recompute, RESIZE_DEBOUNCE);
+    }, false);
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        init();
+    } else {
+        document.addEventListener('DOMContentLoaded', init);
+    }
+})();
+</script>
