@@ -6,8 +6,7 @@
 
 {% block styles %}
 <style>
-    body { padding-bottom: 62px; } /* bar height (36) + padding (12) + border (2) + margin */
-    #page-indicator { bottom: 62px; }
+    body { padding-bottom: 76px; } /* bar height (36) + padding (6+16) + border (2) + margin */
 </style>
 {% endblock %}
 
@@ -62,6 +61,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg><span class="btn-label">Archive</span>
         </button>
     </form>
+    {% if tap_advance_enabled and has_content %}
+    <div id="page-indicator" style="display:none"></div>
+    {% endif %}
 </div>
 
 {% if has_content %}

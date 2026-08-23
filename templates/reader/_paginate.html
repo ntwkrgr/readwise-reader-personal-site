@@ -1,4 +1,3 @@
-<div id="page-indicator" style="display:none"></div>
 <script data-role="paginate-script">
 (function() {
     var articleEl = document.getElementById('article-content');
@@ -128,7 +127,6 @@
 
         var barH = getBarH();
         document.body.style.paddingBottom = (barH + 12) + 'px';
-        if (indicatorEl) indicatorEl.style.bottom = (barH + 8) + 'px';
 
         var pageH = getViewportH() - EDGE_PAD - barH;
         if (pageH < MIN_ADVANCE) pageH = MIN_ADVANCE;
