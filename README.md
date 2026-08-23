@@ -65,6 +65,7 @@ Open `/` for a simple launch point into the dashboard features. Use it when swit
 - Use location tabs (All / Later / New) to narrow the list when needed.
 - Filter by tag using the tag picker at the top of the list.
 - Tap an article title to read it. Content is stripped of images and media for fast loading on e-ink.
+- The reader view has a single action bar fixed to the bottom of the screen (Home, Back to list, Settings, Add note, Highlight Mode, Save Highlight, Archive), so it stays reachable no matter how far you've paged into the article. Buttons show icons with the label hidden off-screen for accessibility; if icons don't render in a given browser, remove the `.reader-bar .btn-label` CSS rule in `templates/base.html` to fall back to text labels.
 - Archive an article from the reader view with the **Archive** button. Archived items are intentionally excluded from list and reader access.
 - Refresh the list manually if you've added new articles from another device.
 
@@ -102,7 +103,7 @@ Settings persist across sessions.
 The reader experience is designed for the Kindle Scribe's experimental web browser:
 
 - Server-side rendered HTML with minimal client-side JavaScript where needed (ES2015/Chrome 75+ only)
-- Large touch targets for the touchscreen
+- Compact but tappable touch targets (36px min-height buttons) to leave more of the screen for reading text; the settings page keeps its own separate control styling
 - High contrast, no color-dependent controls, no animations
 - Georgia/serif font stack for comfortable reading
 - Minimal page weight to keep load times fast on e-ink

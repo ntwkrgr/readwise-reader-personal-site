@@ -19,9 +19,14 @@
     var resizeTimer = null;
     var spacerEl = null;
     var indicatorEl = document.getElementById('page-indicator');
+    var barEl = document.getElementById('reader-bar');
 
     function getViewportH() {
         return window.innerHeight || document.documentElement.clientHeight || 600;
+    }
+
+    function getBarH() {
+        return barEl ? barEl.getBoundingClientRect().height : 0;
     }
 
     function getViewportW() {
@@ -99,11 +104,6 @@
             }
         }
 
-        var toolbars = articleEl.parentNode.querySelectorAll('.toolbar');
-        if (toolbars.length > 0) {
-            pushRect(toolbars[toolbars.length - 1].getBoundingClientRect());
-        }
-
         boxes.sort(function(a, b) { return a.top - b.top; });
         return boxes;
     }
@@ -126,7 +126,11 @@
     function computeStarts() {
         removeSpacer();
 
-        var pageH = getViewportH() - EDGE_PAD;
+        var barH = getBarH();
+        document.body.style.paddingBottom = (barH + 12) + 'px';
+        if (indicatorEl) indicatorEl.style.bottom = (barH + 8) + 'px';
+
+        var pageH = getViewportH() - EDGE_PAD - barH;
         if (pageH < MIN_ADVANCE) pageH = MIN_ADVANCE;
 
         var boxes = collectBoxes();
@@ -156,7 +160,7 @@
 
         var docHeight = getDocHeight();
         var lastStart = result[result.length - 1];
-        var needed = (lastStart + pageH) - docHeight;
+        var needed = (lastStart + getViewportH()) - docHeight;
         addSpacer(needed);
 
         return result;

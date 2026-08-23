@@ -21,7 +21,7 @@
 {% if current_tag %}
 <div class="tag-filter">
     Filtered by tag: <strong>{{ current_tag }}</strong>
-    <a href="{{ url_for('reader_bp.article_list', location=current_location) }}" class="btn" style="margin-left: 8px; padding: 6px 16px; min-height: 36px; font-size: 14px;">Clear</a>
+    <a href="{{ url_for('reader_bp.article_list', location=current_location) }}" class="btn" style="margin-left: 8px;">Clear</a>
 </div>
 {% endif %}
 

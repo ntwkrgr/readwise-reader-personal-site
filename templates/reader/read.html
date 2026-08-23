@@ -2,20 +2,16 @@
 
 {% block title %}{{ article.title }}{% endblock %}
 
-{% block content %}
-<div class="toolbar">
-    <a href="{{ url_for('reader_bp.article_list') }}" class="btn">Back to list</a>
-    <a href="{{ url_for('settings_bp.settings') }}" class="btn">Settings</a>
-    {% if has_content %}
-    <a href="{{ url_for('reader_bp.add_note', doc_id=article.id) }}" class="btn">Add note</a>
-    <button id="highlight-btn" class="btn" style="display:none">Save Highlight</button>
-    <button id="highlight-mode-btn" class="btn">Highlight Mode</button>
-    {% endif %}
-    <form action="{{ url_for('reader_bp.do_archive', doc_id=article.id) }}" method="post" style="margin: 0;">
-        <button type="submit" class="btn btn-dark">Archive</button>
-    </form>
-</div>
+{% block nav %}{% endblock %}
 
+{% block styles %}
+<style>
+    body { padding-bottom: 62px; } /* bar height (36) + padding (12) + border (2) + margin */
+    #page-indicator { bottom: 62px; }
+</style>
+{% endblock %}
+
+{% block content %}
 {% if has_content %}
 <form id="highlight-form" action="{{ url_for('reader_bp.save_highlight', doc_id=article.id) }}" method="POST" style="display:none">
     <input type="hidden" id="highlight-text-input" name="text" value="">
@@ -40,14 +36,31 @@
 </div>
 {% endif %}
 
-<div class="toolbar" style="margin-top: 24px;">
-    <a href="{{ url_for('reader_bp.article_list') }}" class="btn">Back to list</a>
-    <a href="{{ url_for('settings_bp.settings') }}" class="btn">Settings</a>
+<div class="reader-bar" id="reader-bar">
+    <a href="{{ url_for('dashboard_bp.index') }}" class="btn" aria-label="Home" title="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 11l9-8 9 8v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg><span class="btn-label">Home</span>
+    </a>
+    <a href="{{ url_for('reader_bp.article_list') }}" class="btn" aria-label="Back to list" title="Back to list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg><span class="btn-label">Back to list</span>
+    </a>
+    <a href="{{ url_for('settings_bp.settings') }}" class="btn" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></svg><span class="btn-label">Settings</span>
+    </a>
     {% if has_content %}
-    <a href="{{ url_for('reader_bp.add_note', doc_id=article.id) }}" class="btn">Add note</a>
+    <a href="{{ url_for('reader_bp.add_note', doc_id=article.id) }}" class="btn" aria-label="Add note" title="Add note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg><span class="btn-label">Add note</span>
+    </a>
+    <button id="highlight-mode-btn" class="btn" aria-label="Highlight Mode" title="Highlight Mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg><span class="btn-label">Highlight Mode</span>
+    </button>
+    <button id="highlight-btn" class="btn" style="display:none" aria-label="Save Highlight" title="Save Highlight">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6L9 17l-5-5"/></svg><span class="btn-label">Save Highlight</span>
+    </button>
     {% endif %}
-    <form action="{{ url_for('reader_bp.do_archive', doc_id=article.id) }}" method="post" style="margin: 0;">
-        <button type="submit" class="btn btn-dark">Archive</button>
+    <form action="{{ url_for('reader_bp.do_archive', doc_id=article.id) }}" method="post" style="margin: 0 3px;">
+        <button type="submit" class="btn btn-dark" aria-label="Archive" title="Archive">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg><span class="btn-label">Archive</span>
+        </button>
     </form>
 </div>
 
@@ -67,7 +80,7 @@
         var text = sel ? sel.toString().trim() : '';
         if (text.length > 0) {
             selectionText = text;
-            highlightBtn.style.display = 'block';
+            highlightBtn.style.display = 'inline-flex';
         } else {
             highlightBtn.style.display = 'none';
         }
@@ -99,7 +112,10 @@
     if (highlightModeBtn) {
         highlightModeBtn.addEventListener('click', function() {
             highlightMode = !highlightMode;
-            highlightModeBtn.textContent = highlightMode ? 'Exit Highlight Mode' : 'Highlight Mode';
+            highlightModeBtn.querySelector('.btn-label').textContent = highlightMode ? 'Exit Highlight Mode' : 'Highlight Mode';
+            var label = highlightMode ? 'Exit Highlight Mode' : 'Highlight Mode';
+            highlightModeBtn.setAttribute('aria-label', label);
+            highlightModeBtn.setAttribute('title', label);
             if (articleContent) {
                 articleContent.classList.toggle('highlight-mode-active', highlightMode);
             }
