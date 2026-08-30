@@ -56,14 +56,16 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6L9 17l-5-5"/></svg><span class="btn-label">Save Highlight</span>
     </button>
     {% endif %}
-    <form action="{{ url_for('reader_bp.do_archive', doc_id=article.id) }}" method="post" style="margin: 0 3px;">
-        <button type="submit" class="btn btn-dark" aria-label="Archive" title="Archive">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg><span class="btn-label">Archive</span>
-        </button>
-    </form>
-    {% if tap_advance_enabled and has_content %}
-    <div id="page-indicator" style="display:none"></div>
-    {% endif %}
+    <div class="reader-bar-end">
+        <form action="{{ url_for('reader_bp.do_archive', doc_id=article.id) }}" method="post">
+            <button type="submit" class="btn btn-dark" aria-label="Archive" title="Archive">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg><span class="btn-label">Archive</span>
+            </button>
+        </form>
+        {% if tap_advance_enabled and has_content %}
+        <div id="page-indicator" style="display:none"></div>
+        {% endif %}
+    </div>
 </div>
 
 {% if has_content %}
