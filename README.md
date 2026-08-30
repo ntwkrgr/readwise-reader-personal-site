@@ -8,6 +8,7 @@ A multi-feature personal dashboard built with Flask. It keeps the original Kindl
 - **Readwise Reader** at `/reader/` for browsing and reading Readwise Reader articles.
 - **Daily Review** at `/highlights/` with source titles and a link to the active Readwise review.
 - **Highlights Browser** at `/highlights/all` with paginated Readwise highlights.
+- **Notebook** at `/notebook/` for capturing journal entries and to-dos as plain text files.
 
 ## Setup
 
@@ -50,6 +51,9 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 | `CACHE_DIR` | No | `<app_dir>/.cache` | Disk cache location for API responses. |
 | `LIST_CACHE_TTL` | No | `1200` | Readwise list cache TTL in seconds. |
 | `ARTICLE_CACHE_TTL` | No | `3600` | Readwise article cache TTL in seconds. |
+| `NOTES_HOST_DIR` | No | `./notes` | Host folder bind-mounted to `/app/notes` in Docker, where Notebook `.txt` files are written. |
+| `NOTES_DIR` | No | `<app_dir>/notes` | In-container notes location (only relevant if not using Docker's default mount). |
+| `NOTES_TZ` | No | `America/Chicago` | Timezone used for Notebook filename timestamps. |
 
 ## Usage
 
@@ -75,6 +79,14 @@ Open `/` for a simple launch point into the dashboard features. Use it when swit
 - The **Complete Review on Readwise** button uses the `review_url` returned by Readwise, such as `https://readwise.io/reviews/<review_id>`.
 - Open `/highlights/all` to browse paginated Readwise highlights.
 - Use **Previous page** and **Next page** at the bottom of the paginated list.
+
+### Notebook
+
+- Open `/notebook/` to write a journal entry or a to-do. Pick **Journal** or **Thing** with the toggle above the text box, type your note, and tap **Save**.
+- Each save writes one plain UTF-8 `.txt` file named `journal-YYYYMMDD-HHMMSS.txt` or `thing-YYYYMMDD-HHMMSS.txt` (local time, per `NOTES_TZ`) into the folder configured by `NOTES_HOST_DIR`. This filename contract is intentionally stable — other automations outside this project watch that folder and classify files by their prefix.
+- The confirmation message after saving shows the exact filename that was written.
+- Open `/notebook/notes` (via the **Notes** button, top-right of the entry page) for a time-sorted, newest-first list of everything you've written. Tap a note to read the full text.
+- Notebook is intentionally simple: no editing or deleting from the UI. Manage files directly in `NOTES_HOST_DIR` if you need to.
 
 ## API Usage and Caching
 

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ note.kind|capitalize }} — {{ note.created_at.strftime("%Y-%m-%d %H:%M") }}{% endblock %}
+
+{% block styles %}
+<style>
+    .notebook-body {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1.5;
+        margin: 16px 0 24px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 22px; margin-bottom: 8px;">{{ note.kind|capitalize }}</h1>
+<p class="article-meta" style="margin-bottom: 16px;">{{ note.created_at.strftime("%Y-%m-%d %H:%M") }}</p>
+<pre class="notebook-body">{{ note.text }}</pre>
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+    <a href="{{ url_for('notebook_bp.notes_list') }}" class="btn">Back to Notes</a>
+    <a href="{{ url_for('dashboard_bp.index') }}" class="btn">Home</a>
+</div>
+{% endblock %}

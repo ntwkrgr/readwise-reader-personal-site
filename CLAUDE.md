@@ -25,6 +25,7 @@ Flask Blueprints package under `app/`. Entry point is `app.py`, a shim that call
 | `/` | `app/dashboard.py` — home page |
 | `/reader/` | `app/reader/` — Readwise Reader |
 | `/highlights/`, `/highlights/all` | `app/highlights/` — Daily Review, paginated list |
+| `/notebook/`, `/notebook/notes` | `app/notebook/` — journal/thing text capture, saved as `.txt` files |
 | `/settings` | `app/settings.py` |
 | (shared) | `app/cache.py`, `app/shared.py` — disk cache, Readwise API client |
 
@@ -44,7 +45,8 @@ uv run pytest
 - `create_app()` spawns a background cache-prewarm thread unless `TESTING` is set — tests must call `create_app({"TESTING": True})`.
 - The Docker cache is a named volume (`cache:/app/.cache`); `docker compose up -d --build` does **not** clear it. Use `docker compose down -v` to wipe it.
 - Gunicorn runs 2 workers; `app/cache.py` uses a `diskcache.Lock` (expire=30) so concurrent workers don't duplicate API calls.
-- `ReadwiseAPIError` (`app/shared.py`) is the single error type every blueprint raises and every route catches into `templates/error.html`.
+- `ReadwiseAPIError` (`app/shared.py`) is the error type every Readwise-backed blueprint raises and every route catches into `templates/error.html`. The one exception is `app/notebook/`, which never touches Readwise — it raises its own `NotebookError` (`app/notebook/storage.py`), caught the same way by `notebook_bp` routes.
+- Notebook writes `.txt` files to `NOTES_DIR` (default `<repo_root>/notes`; override via env). In Docker this is bind-mounted from the host (`NOTES_HOST_DIR` in `.env`, default `./notes`) rather than a named volume, specifically so host-side automations outside this repo can watch the folder. Filenames (`journal-YYYYMMDD-HHMMSS.txt` / `thing-YYYYMMDD-HHMMSS.txt`) are a stable external contract — don't change the format without checking what consumes it. Timestamps use `NOTES_TZ` (default `America/Chicago`) via `zoneinfo`, which requires the `tzdata` package on `python:3.12-slim` (no system tz database) — it's in `requirements.txt`.
 - Client-side JS must stay ES2015 / Chrome 75-compatible — the target browser is the Kindle Colorsoft's built-in experimental browser. This constraint carries over unverified from the Scribe (same Kindle firmware browser family); re-confirm via `navigator.userAgent` on-device before relying on any newer JS feature.
 - The Colorsoft screen is ~7" (1264×1680, 300 ppi mono / 150 ppi color). `templates/` has no `@media` queries, so the layout is fully fluid — everything scales except `body { max-width: 800px }`. The real CSS viewport width (`window.innerWidth`) hasn't been measured on-device yet.
 - Tap-to-advance pagination (`templates/reader/_paginate.html`) measures real line-box positions from the rendered DOM to compute page boundaries — it's coupled to the reading-view CSS in `templates/base.html` (font, line-height, `article` element rules). Changing that CSS can shift where pages break; re-check pagination on-device after reading-view CSS changes.

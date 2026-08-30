@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     volumes:
       - cache:/app/.cache
+      - ${NOTES_HOST_DIR:-./notes}:/app/notes
 
 volumes:
   cache:

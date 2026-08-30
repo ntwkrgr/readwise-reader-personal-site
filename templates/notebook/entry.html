@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Notebook{% endblock %}
+
+{% block styles %}
+<style>
+    .notebook-page {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 132px);
+    }
+    .notebook-toggle-row {
+        margin-bottom: 16px;
+    }
+    .notebook-text {
+        flex: 1;
+        width: 100%;
+        min-height: 200px;
+        padding: 12px;
+        margin-bottom: 12px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 18px;
+        line-height: 1.5;
+        color: #000;
+        background: #fff;
+        border: 2px solid #000;
+        border-radius: 8px;
+        resize: none;
+    }
+    .notebook-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+    .notebook-nav-notes {
+        margin-left: auto;
+    }
+    body.theme-dark .notebook-text {
+        color: #fff;
+        background: #000;
+        border-color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block nav %}
+<nav class="nav">
+    <a href="{{ url_for('dashboard_bp.index') }}" class="btn">Home</a>
+    <a href="{{ url_for('notebook_bp.notes_list') }}" class="btn notebook-nav-notes">Notes</a>
+</nav>
+{% endblock %}
+
+{% block content %}
+<form method="post" action="{{ url_for('notebook_bp.index') }}" class="notebook-page">
+    <div class="notebook-toggle-row">
+        <div class="settings-group">
+            <input type="radio" name="kind" id="kind-journal" value="journal" class="settings-radio" {% if kind == "journal" %}checked{% endif %}>
+            <label for="kind-journal" class="settings-option">Journal</label>
+            <input type="radio" name="kind" id="kind-thing" value="thing" class="settings-radio" {% if kind == "thing" %}checked{% endif %}>
+            <label for="kind-thing" class="settings-option">Thing</label>
+        </div>
+    </div>
+    <textarea name="text" class="notebook-text" placeholder="Type here..." autofocus></textarea>
+    <div class="notebook-actions">
+        <button type="submit" class="btn btn-dark">Save</button>
+    </div>
+</form>
+{% endblock %}
