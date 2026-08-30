@@ -62,7 +62,7 @@
 
     // --- Boundary measurement -------------------------------------------
 
-    function collectBoxes() {
+    function collectBoxes(pageH) {
         var boxes = [];
         var scrollY = getScrollY();
 
@@ -71,6 +71,12 @@
             boxes.push({ top: rect.top + scrollY, bottom: rect.bottom + scrollY });
         }
 
+        // PRE/TABLE are kept atomic (one box, no internal break points) as
+        // long as they fit within a single page. A block taller than the
+        // page would otherwise get hard-cut at an arbitrary pixel offset by
+        // computeStarts()'s MIN_ADVANCE fallback, so past that size we
+        // descend for finer break points instead: per-line for PRE, per-row
+        // for TABLE.
         var walker = document.createTreeWalker(
             articleEl,
             NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
@@ -78,8 +84,24 @@
                 acceptNode: function(node) {
                     if (node.nodeType === 1) {
                         var tag = node.tagName;
-                        if (tag === 'PRE' || tag === 'TABLE') {
-                            pushRect(node.getBoundingClientRect());
+                        if (tag === 'PRE') {
+                            var preRect = node.getBoundingClientRect();
+                            if (preRect.height <= pageH) {
+                                pushRect(preRect);
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            return NodeFilter.FILTER_SKIP;
+                        }
+                        if (tag === 'TABLE') {
+                            var tableRect = node.getBoundingClientRect();
+                            if (tableRect.height <= pageH) {
+                                pushRect(tableRect);
+                            } else {
+                                var rows = node.querySelectorAll('tr');
+                                for (var r = 0; r < rows.length; r++) {
+                                    pushRect(rows[r].getBoundingClientRect());
+                                }
+                            }
                             return NodeFilter.FILTER_REJECT;
                         }
                         return NodeFilter.FILTER_SKIP;
@@ -131,7 +153,7 @@
         var pageH = getViewportH() - EDGE_PAD - barH;
         if (pageH < MIN_ADVANCE) pageH = MIN_ADVANCE;
 
-        var boxes = collectBoxes();
+        var boxes = collectBoxes(pageH);
         var result = [0];
         var cur = 0;
         var searchFrom = 0; // boxes are sorted by top and limits only grow, so this never rewinds

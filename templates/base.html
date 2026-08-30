@@ -23,11 +23,14 @@
         html {
             scrollbar-width: none;      /* Firefox / newer Chromium */
             -ms-overflow-style: none;   /* legacy Edge */
+            scrollbar-color: transparent transparent;
         }
-        ::-webkit-scrollbar {
+        ::-webkit-scrollbar,
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
             width: 0;
             height: 0;
-            display: none;              /* Chrome 75 (Kindle Scribe browser) */
+            display: none;              /* Chrome 75 (Kindle Colorsoft browser) */
         }
         body.text-size-small { font-size: 16px; }
         body.text-size-small article { font-size: 16px; }
@@ -112,7 +115,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             padding: 6px 8px 16px;
             background: #fff;
             border-top: 2px solid #000;
@@ -262,10 +265,6 @@
             border: 2px solid #000;
         }
         .reader-bar #page-indicator {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
             font-size: 13px;
             font-family: Georgia, "Times New Roman", serif;
             color: #000;

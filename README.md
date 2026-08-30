@@ -27,7 +27,7 @@ Edit `.env` and replace `your_readwise_access_token_here` with your actual token
 docker compose up -d
 ```
 
-The site runs at `http://127.0.0.1:5555`. Access it from your Kindle Scribe at `http://<your-machine-ip>:5555`.
+The site runs at `http://127.0.0.1:5555`. Access it from your Kindle Colorsoft at `http://<your-machine-ip>:5555`.
 
 The container automatically restarts on crash. To survive reboots, enable **"Start Docker Desktop when you log in"** in Docker Desktop → Settings → General.
 
@@ -65,7 +65,7 @@ Open `/` for a simple launch point into the dashboard features. Use it when swit
 - Use location tabs (All / Later / New) to narrow the list when needed.
 - Filter by tag using the tag picker at the top of the list.
 - Tap an article title to read it. Content is stripped of images and media for fast loading on e-ink.
-- The reader view has a single action bar fixed to the bottom of the screen (Home, Back to list, Settings, Add note, Highlight Mode, Save Highlight, Archive), so it stays reachable no matter how far you've paged into the article. Buttons show icons with the label hidden off-screen for accessibility; if icons don't render in a given browser, remove the `.reader-bar .btn-label` CSS rule in `templates/base.html` to fall back to text labels.
+- The reader view has a single action bar fixed to the bottom of the screen (Home, Back to list, Settings, Add note, Highlight Mode, Save Highlight, Archive), so it stays reachable no matter how far you've paged into the article. It's a compact row that wraps to a second row if the screen is too narrow to fit every button (e.g. once Save Highlight appears); pagination adjusts to the bar's actual height either way. Buttons show icons with the label hidden off-screen for accessibility; if icons don't render in a given browser, remove the `.reader-bar .btn-label` CSS rule in `templates/base.html` to fall back to text labels.
 - Archive an article from the reader view with the **Archive** button. Archived items are intentionally excluded from list and reader access.
 - Refresh the list manually if you've added new articles from another device.
 
@@ -98,12 +98,13 @@ The **Settings** panel lets you tune the reading experience for your display and
 
 Settings persist across sessions.
 
-## Kindle Scribe Browser Notes
+## Kindle Colorsoft Browser Notes
 
-The reader experience is designed for the Kindle Scribe's experimental web browser:
+The reader experience is designed for the Kindle Colorsoft's experimental web browser:
 
 - Server-side rendered HTML with minimal client-side JavaScript where needed (ES2015/Chrome 75+ only)
 - Compact but tappable touch targets (36px min-height buttons) to leave more of the screen for reading text; the settings page keeps its own separate control styling
 - High contrast, no color-dependent controls, no animations
 - Georgia/serif font stack for comfortable reading
 - Minimal page weight to keep load times fast on e-ink
+- The Colorsoft has a Kaleido 3 color layer, but the UI stays deliberately monochrome/high-contrast — the color layer runs at 150 ppi vs. 300 ppi for black-and-white, and color text would lose contrast

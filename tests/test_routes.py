@@ -184,6 +184,17 @@ def test_read_article_tap_advance_on_renders_paginator_and_indicator(client):
     assert b"paginate-script" in resp.data
     assert b"tap-overlay" not in resp.data
 
+    # #page-indicator must stay inside #reader-bar: the highlight-mode hide
+    # selector (`#article-content.highlight-mode-active ~ .reader-bar
+    # #page-indicator`) and the bar's flex layout both depend on that nesting.
+    # No <script> tag appears inside the reader-bar markup, so its position
+    # marks the end of the bar for this ordering check.
+    body = resp.data.decode()
+    bar_start = body.index('id="reader-bar"')
+    next_script = body.index("<script", bar_start)
+    indicator_pos = body.index('id="page-indicator"', bar_start)
+    assert bar_start < indicator_pos < next_script
+
 
 def test_read_article_tap_advance_off_ships_no_paginate_js(client):
     client.set_cookie("readwise_tap_advance", "off")
