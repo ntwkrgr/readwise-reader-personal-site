@@ -31,11 +31,13 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
 
     from app.dashboard import dashboard_bp
     from app.highlights import highlights_bp
+    from app.notebook import notebook_bp
     from app.reader import reader_bp
     from app.settings import settings_bp
 
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(highlights_bp)
+    app.register_blueprint(notebook_bp)
     app.register_blueprint(reader_bp)
     app.register_blueprint(settings_bp)
 
