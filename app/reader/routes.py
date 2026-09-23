@@ -9,9 +9,10 @@ from app.settings import SORT_COOKIE, VALID_SORTS
 from app.shared import ReadwiseAPIError, sanitize_html
 
 from . import reader_bp
-from .api import archive_article, fetch_article, fetch_article_list, save_highlight_to_readwise
+from .api import ACTIVE_LOCATIONS, archive_article, fetch_article, fetch_article_list, save_highlight_to_readwise
 
-VALID_LOCATIONS = {"all", "later", "new"}
+VALID_LOCATIONS = set(ACTIVE_LOCATIONS)
+DEFAULT_LOCATION = ACTIVE_LOCATIONS[0]
 
 
 def _sort_articles(articles: list[dict[str, Any]], sort: str) -> list[dict[str, Any]]:
@@ -28,9 +29,9 @@ def _sort_articles(articles: list[dict[str, Any]], sort: str) -> list[dict[str, 
 
 @reader_bp.route("/")
 def article_list():
-    location = request.args.get("location", "all")
+    location = request.args.get("location", DEFAULT_LOCATION)
     if location not in VALID_LOCATIONS:
-        location = "all"
+        location = DEFAULT_LOCATION
     sort = request.cookies.get(SORT_COOKIE, "newest")
     if sort not in VALID_SORTS:
         sort = "newest"
@@ -159,9 +160,9 @@ def do_archive(doc_id: str):
 
 @reader_bp.route("/tags")
 def tag_picker():
-    location = request.args.get("location", "all")
+    location = request.args.get("location", DEFAULT_LOCATION)
     if location not in VALID_LOCATIONS:
-        location = "all"
+        location = DEFAULT_LOCATION
     try:
         data = fetch_article_list(location=location, page_cursor=None, tag=None)
     except ReadwiseAPIError as e:

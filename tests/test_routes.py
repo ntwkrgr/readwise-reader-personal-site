@@ -97,10 +97,10 @@ def test_list_renders_articles(client):
     assert b"Test Article" in resp.data
 
 
-def test_list_defaults_to_all_location(client):
+def test_list_defaults_to_shortlist_location(client):
     with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
         client.get("/reader/")
-    mock.assert_called_once_with(location="all", page_cursor=None, tag=None)
+    mock.assert_called_once_with(location="shortlist", page_cursor=None, tag=None)
 
 
 def test_list_passes_location_param(client):
@@ -109,10 +109,46 @@ def test_list_passes_location_param(client):
     mock.assert_called_once_with(location="later", page_cursor=None, tag=None)
 
 
-def test_list_invalid_location_falls_back_to_all(client):
+def test_list_passes_shortlist_location(client):
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
+        client.get("/reader/?location=shortlist")
+    mock.assert_called_once_with(location="shortlist", page_cursor=None, tag=None)
+
+
+def test_list_new_location_no_longer_valid(client):
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
+        client.get("/reader/?location=new")
+    mock.assert_called_once_with(location="shortlist", page_cursor=None, tag=None)
+
+
+def test_list_tabs_show_shortlist_and_later_only(client):
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST):
+        resp = client.get("/reader/")
+    assert b"location=shortlist" in resp.data
+    assert b"location=later" in resp.data
+    assert b"location=new" not in resp.data
+
+
+def test_included_item_filter_accepts_shortlist_and_later_only():
+    from app.reader.api import _is_included_item
+    base = {"parent_id": None, "category": "article"}
+    assert _is_included_item({**base, "location": "shortlist"})
+    assert _is_included_item({**base, "location": "later"})
+    assert not _is_included_item({**base, "location": "new"})
+    assert not _is_included_item({**base, "location": "archive"})
+
+
+def test_list_all_location_no_longer_valid(client):
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
+        resp = client.get("/reader/?location=all")
+    mock.assert_called_once_with(location="shortlist", page_cursor=None, tag=None)
+    assert b"location=all" not in resp.data
+
+
+def test_list_invalid_location_falls_back_to_shortlist(client):
     with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
         client.get("/reader/?location=bogus")
-    mock.assert_called_once_with(location="all", page_cursor=None, tag=None)
+    mock.assert_called_once_with(location="shortlist", page_cursor=None, tag=None)
 
 
 def test_list_shows_cache_age_when_refreshed(client):

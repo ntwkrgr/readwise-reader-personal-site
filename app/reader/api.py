@@ -21,12 +21,14 @@ from app.shared import (
 
 ARTICLES_PER_PAGE = 20
 READWISE_V2_HIGHLIGHTS = "https://readwise.io/api/v2/highlights/"
+# Reader locations shown in the app, in tab order.
+ACTIVE_LOCATIONS = ("shortlist", "later")
 
 
-def _is_included_new_or_later_item(item: dict[str, Any]) -> bool:
+def _is_included_item(item: dict[str, Any]) -> bool:
     return (
         item.get("parent_id") is None
-        and item.get("location") in {"new", "later"}
+        and item.get("location") in ACTIVE_LOCATIONS
         and item.get("category") in {"article", "rss"}
     )
 
@@ -40,7 +42,7 @@ def _fetch_article_list_from_api(
     if tag:
         params["tag"] = tag
     data = api_get(f"{READWISE_API_BASE}/list/", params=params)
-    results = [item for item in data.get("results", []) if _is_included_new_or_later_item(item)]
+    results = [item for item in data.get("results", []) if _is_included_item(item)]
     return {
         "results": results,
         "nextPageCursor": data.get("nextPageCursor"),
@@ -49,44 +51,13 @@ def _fetch_article_list_from_api(
 
 
 def fetch_article_list(
-    location: str = "later",
+    location: str = ACTIVE_LOCATIONS[0],
     page_cursor: str | None = None,
     tag: str | None = None,
 ) -> dict[str, Any]:
-    if location == "all":
-        return fetch_all_active_articles(page_cursor=page_cursor, tag=tag)
     key = _list_key(location, page_cursor, tag)
     return cached_fetch(
         key, lambda: _fetch_article_list_from_api(location, page_cursor, tag), LIST_CACHE_TTL
-    )
-
-
-def _fetch_all_active_articles_from_api(
-    page_cursor: str | None, tag: str | None
-) -> dict[str, Any]:
-    all_articles: dict[str, dict[str, Any]] = {}
-    total_count = 0
-    for location in ("later", "new"):
-        batch = fetch_article_list(location=location, page_cursor=None, tag=tag)
-        for article in batch["results"]:
-            article_id = str(article.get("id", ""))
-            if article_id:
-                all_articles.setdefault(article_id, article)
-        total_count += batch.get("count", 0)
-    collected = list(all_articles.values())
-    return {
-        "results": collected[:ARTICLES_PER_PAGE],
-        "nextPageCursor": None,
-        "count": total_count,
-    }
-
-
-def fetch_all_active_articles(
-    page_cursor: str | None = None, tag: str | None = None
-) -> dict[str, Any]:
-    key = _list_key("all", page_cursor, tag)
-    return cached_fetch(
-        key, lambda: _fetch_all_active_articles_from_api(page_cursor, tag), LIST_CACHE_TTL
     )
 
 
@@ -97,8 +68,8 @@ def _fetch_article_from_api(doc_id: str) -> dict[str, Any]:
     if not results:
         raise ReadwiseAPIError("Article not found.")
     article = results[0]
-    if not _is_included_new_or_later_item(article):
-        raise ReadwiseAPIError("This reader only shows Articles/RSS saved to New or Later.")
+    if not _is_included_item(article):
+        raise ReadwiseAPIError("This reader only shows Articles/RSS saved to Shortlist or Later.")
     return article
 
 

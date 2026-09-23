@@ -64,9 +64,9 @@ Open `/` for a simple launch point into the dashboard features. Use it when swit
 ### Readwise Reader
 
 - Open `/reader/` to browse your Readwise Reader queue.
-- The article list defaults to **All** and combines eligible items from Later and New only.
+- The article list shows your Reader **Shortlist** and **Later** lists; it opens on Shortlist.
 - Eligible items are **Articles** and **RSS** entries; archive, feed-only, and video items are excluded.
-- Use location tabs (All / Later / New) to narrow the list when needed.
+- Switch between lists with the Shortlist / Later tabs.
 - Filter by tag using the tag picker at the top of the list.
 - Tap an article title to read it. Content is stripped of images and media for fast loading on e-ink.
 - The reader view has a single action bar fixed to the bottom of the screen (Home, Back to list, Settings, Add note, Highlight Mode, Save Highlight, Archive), so it stays reachable no matter how far you've paged into the article. It's a compact row that wraps to a second row if the screen is too narrow to fit every button (e.g. once Save Highlight appears); pagination adjusts to the bar's actual height either way. Buttons show icons with the label hidden off-screen for accessibility; if icons don't render in a given browser, remove the `.reader-bar .btn-label` CSS rule in `templates/base.html` to fall back to text labels.
