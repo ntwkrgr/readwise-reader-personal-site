@@ -23,13 +23,15 @@ ARTICLES_PER_PAGE = 20
 READWISE_V2_HIGHLIGHTS = "https://readwise.io/api/v2/highlights/"
 # Reader locations shown in the app, in tab order.
 ACTIVE_LOCATIONS = ("shortlist", "later")
+# Reader document categories shown in the app.
+INCLUDED_CATEGORIES = ("article", "rss", "email")
 
 
 def _is_included_item(item: dict[str, Any]) -> bool:
     return (
         item.get("parent_id") is None
         and item.get("location") in ACTIVE_LOCATIONS
-        and item.get("category") in {"article", "rss"}
+        and item.get("category") in INCLUDED_CATEGORIES
     )
 
 
@@ -69,7 +71,7 @@ def _fetch_article_from_api(doc_id: str) -> dict[str, Any]:
         raise ReadwiseAPIError("Article not found.")
     article = results[0]
     if not _is_included_item(article):
-        raise ReadwiseAPIError("This reader only shows Articles/RSS saved to Shortlist or Later.")
+        raise ReadwiseAPIError("This reader only shows Articles/RSS/Emails saved to Shortlist or Later.")
     return article
 
 

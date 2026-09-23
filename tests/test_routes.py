@@ -138,6 +138,15 @@ def test_included_item_filter_accepts_shortlist_and_later_only():
     assert not _is_included_item({**base, "location": "archive"})
 
 
+def test_included_item_filter_accepts_article_rss_and_email():
+    from app.reader.api import _is_included_item
+    base = {"parent_id": None, "location": "later"}
+    for category in ("article", "rss", "email"):
+        assert _is_included_item({**base, "category": category})
+    for category in ("video", "pdf", "tweet", "epub"):
+        assert not _is_included_item({**base, "category": category})
+
+
 def test_list_all_location_no_longer_valid(client):
     with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock:
         resp = client.get("/reader/?location=all")
@@ -198,6 +207,13 @@ def test_read_article_renders_content(client):
     assert resp.status_code == 200
     assert b"Test Article" in resp.data
     assert b"Hello world" in resp.data
+
+
+def test_read_article_has_no_settings_button(client):
+    with patch.object(routes_module, "fetch_article", return_value=SAMPLE_ARTICLE):
+        resp = client.get("/reader/read/abc123")
+    assert b'href="/settings"' not in resp.data
+    assert b'aria-label="Settings"' not in resp.data
 
 
 def test_read_article_strips_images(client):
