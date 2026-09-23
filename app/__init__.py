@@ -14,10 +14,10 @@ load_dotenv()
 def _prewarm_cache() -> None:
     time.sleep(2)  # Let gunicorn finish worker initialization
     try:
-        from app.reader.api import fetch_article_list
+        from app.reader.api import ACTIVE_LOCATIONS, fetch_article_list
 
-        fetch_article_list(location="later")
-        fetch_article_list(location="new")
+        for location in ACTIVE_LOCATIONS:
+            fetch_article_list(location=location)
     except Exception:
         pass  # Best-effort; real errors will surface on first user request
 
