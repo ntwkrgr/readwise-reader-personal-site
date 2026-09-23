@@ -65,7 +65,7 @@ Open `/` for a simple launch point into the dashboard features. Use it when swit
 
 - Open `/reader/` to browse your Readwise Reader queue.
 - The article list shows your Reader **Shortlist** and **Later** lists; it opens on Shortlist.
-- Eligible items are **Articles** and **RSS** entries; archive, feed-only, and video items are excluded.
+- Eligible items are **Articles**, **RSS** entries, and **Emails**; archive, feed-only, and video items are excluded.
 - Switch between lists with the Shortlist / Later tabs.
 - Filter by tag using the tag picker at the top of the list.
 - Tap an article title to read it. Content is stripped of images and media for fast loading on e-ink.
