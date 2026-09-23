@@ -83,9 +83,9 @@ Open `/` for a simple launch point into the dashboard features. Use it when swit
 ### Notebook
 
 - Open `/notebook/` to write a journal entry or a to-do. Pick **Journal** or **Thing** with the toggle above the text box, type your note, and tap **Save**.
-- Each save writes one plain UTF-8 `.txt` file named `journal-YYYYMMDD-HHMMSS.txt` or `thing-YYYYMMDD-HHMMSS.txt` (local time, per `NOTES_TZ`) into the folder configured by `NOTES_HOST_DIR`. This filename contract is intentionally stable — other automations outside this project watch that folder and classify files by their prefix.
+- Each save writes one plain UTF-8 `.txt` file named `journal-YYYYMMDD-HHMMSS.txt` or `thing-YYYYMMDD-HHMMSS.txt` (local time, per `NOTES_TZ`) into the folder configured by `NOTES_HOST_DIR`. This filename contract is intentionally stable — other automations outside this project watch that folder and classify files by their prefix. The companion [notebook-sync](https://github.com/ntwkrgr/notebook-sync) cron scripts import `thing-*` files into the Things 3 Inbox and `journal-*` files into Apple Journal nightly, then move them into a `processed/` subfolder.
 - The confirmation message after saving shows the exact filename that was written.
-- Open `/notebook/notes` (via the **Notes** button, top-right of the entry page) for a time-sorted, newest-first list of everything you've written. Tap a note to read the full text.
+- Open `/notebook/notes` (via the **Notes** button, top-right of the entry page) for a time-sorted, newest-first list of notes still in the top level of `NOTES_HOST_DIR` — anything notebook-sync has already imported (moved to `processed/`) no longer appears. Tap a note to read the full text.
 - Notebook is intentionally simple: no editing or deleting from the UI. Manage files directly in `NOTES_HOST_DIR` if you need to.
 
 ## API Usage and Caching

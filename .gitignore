@@ -6,3 +6,7 @@ venv/
 .venv/
 .cache/
 notes/
+.claude/settings.local.json
+.claude/worktrees/
+.codex-screenshots/
+AGENTS.md
