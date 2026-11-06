@@ -21,12 +21,13 @@ def _review_url(data: dict) -> str | None:
 def daily_review():
     try:
         data = fetch_daily_review()
-        books_data = fetch_books()
+        highlights = data.get("highlights", [])
+        # Review highlights carry their own title/author; load the book map only as a fallback.
+        books_data = fetch_books() if any(not h.get("title") for h in highlights) else {}
     except ReadwiseAPIError as e:
         return render_template("error.html", message=str(e), retry_url=request.url)
 
     books = {b["id"]: b for b in books_data.get("results", [])}
-    highlights = data.get("highlights", [])
 
     return render_template(
         "highlights/review.html",
