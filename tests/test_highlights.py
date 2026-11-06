@@ -101,11 +101,13 @@ def test_fetch_books_paginates_and_caches_all_results(client):
     with patch.object(highlights_api, "api_get", side_effect=[first_page, second_page]) as mock_api_get:
         data = highlights_api.fetch_books()
 
+    books_url = f"{highlights_api.READWISE_V2_BASE}/books/"
+    page_size = highlights_api.BOOKS_PAGE_SIZE
     assert data["results"] == [SAMPLE_BOOK, second_book]
     assert data["next"] is None
     assert cache_module._cache.get("highlights:books:all") == data
-    assert mock_api_get.call_args_list[0].args == (f"{highlights_api.READWISE_V2_BASE}/books/",)
-    assert mock_api_get.call_args_list[1].args == (next_url,)
+    assert mock_api_get.call_args_list[0].args == (books_url, {"page": 1, "page_size": page_size})
+    assert mock_api_get.call_args_list[1].args == (books_url, {"page": 2, "page_size": page_size})
 
 
 def test_daily_review_renders(client):
@@ -155,6 +157,18 @@ def test_daily_review_uses_review_highlight_source_metadata(client):
 
     assert b"Review Article" in resp.data
     assert b"Review Author" in resp.data
+
+
+def test_daily_review_skips_books_fetch_when_highlights_have_titles(client):
+    review_data = {"highlights": [{**SAMPLE_HIGHLIGHT, "title": "Review Article"}]}
+
+    with patch.object(highlights_routes, "fetch_daily_review", return_value=review_data):
+        with patch.object(highlights_routes, "fetch_books") as mock_fetch_books:
+            resp = client.get("/highlights/")
+
+    assert resp.status_code == 200
+    assert b"Review Article" in resp.data
+    mock_fetch_books.assert_not_called()
 
 
 def test_daily_review_api_error_renders_error(client):
