@@ -20,7 +20,7 @@ Get your access token from [readwise.io/access_token](https://readwise.io/access
 cp .env.example .env
 ```
 
-Edit `.env` and replace `your_readwise_access_token_here` with your actual token. Optionally set `SECRET_KEY` to any random string (used for flash message session cookies).
+Edit `.env` and replace `your_readwise_access_token_here` with your actual token. Also set `SECRET_KEY` to any random string. It's required: the two gunicorn workers must share one key or flash messages get lost between requests.
 
 2. **Start with Docker:**
 
@@ -69,7 +69,7 @@ Open `/` for a simple launch point into the dashboard features. Use it when swit
 - Switch between lists with the Shortlist / Later tabs.
 - Filter by tag using the tag picker at the top of the list.
 - Tap an article title to read it. Content is stripped of images and media for fast loading on e-ink.
-- The reader view has a single action bar fixed to the bottom of the screen (Home, Back to list, Settings, Add note, Highlight Mode, Save Highlight, Archive), so it stays reachable no matter how far you've paged into the article. It's a compact row that wraps to a second row if the screen is too narrow to fit every button (e.g. once Save Highlight appears); pagination adjusts to the bar's actual height either way. Buttons show icons with the label hidden off-screen for accessibility; if icons don't render in a given browser, remove the `.reader-bar .btn-label` CSS rule in `templates/base.html` to fall back to text labels.
+- The reader view has a single action bar fixed to the bottom of the screen (Home, Back to list, Add note, Highlight Mode, Save Highlight, Archive; Settings is on the Home page), so it stays reachable no matter how far you've paged into the article. It's a compact row that wraps to a second row if the screen is too narrow to fit every button (e.g. once Save Highlight appears); pagination adjusts to the bar's actual height either way. Buttons show icons with the label hidden off-screen for accessibility; if icons don't render in a given browser, remove the `.reader-bar .btn-label` CSS rule in `templates/base.html` to fall back to text labels.
 - Archive an article from the reader view with the **Archive** button. Archived items are intentionally excluded from list and reader access.
 - Refresh the list manually if you've added new articles from another device.
 
@@ -90,7 +90,7 @@ Open `/` for a simple launch point into the dashboard features. Use it when swit
 
 ## API Usage and Caching
 
-The app caches Readwise responses to disk so the cache survives container restarts and reboots. A cold cache makes at most **2 API calls** to load the All reader list view (one per location). Individual article fetches are also cached. Cached Readwise responses are reused for 20 minutes (list) or 60 minutes (articles) by default.
+The app caches Readwise responses to disk so the cache survives container restarts and reboots. On a cold cache, each list view (Shortlist or Later) loads with one API call, and the startup prewarm fetches both. Individual article fetches are also cached. Cached Readwise responses are reused for 20 minutes (list) or 60 minutes (articles) by default.
 
 On startup, each worker pre-warms the cache in the background. A distributed lock (backed by the same disk cache) ensures that concurrent workers never duplicate API calls for the same resource; at most one request fires per cache key even under load.
 
@@ -103,7 +103,7 @@ If a 429 is returned despite all this, the app waits and retries once before sur
 The **Settings** panel lets you tune the reading experience for your display and preference:
 
 - **Text size** -- scale up or down from the default for comfortable reading on e-ink.
-- **Font weight** -- adjust between light and bold to suit your screen's contrast.
+- **Font weight** -- adjust between normal and bold to suit your screen's contrast.
 - **Theme** -- choose light, dark, or auto. Auto follows the browser/device color scheme when supported.
 - **Tap to progress** -- tap the left/right side of reader pages to page backward/forward without visible fade overlays.
 - **Sort order** -- sort your article list by newest, oldest, or random.
