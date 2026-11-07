@@ -367,20 +367,20 @@ def test_settings_post_rejects_invalid_values(client):
     assert "readwise_text_size=medium" in set_cookies  # Falls back to default
 
 
-def test_surprise_opens_a_random_later_article(client):
+def test_surprise_opens_a_random_shortlist_article(client):
     with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock_list:
         resp = client.get("/reader/surprise")
-    assert mock_list.call_args.kwargs["location"] == "later"
+    assert mock_list.call_args.kwargs["location"] == "shortlist"
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/reader/read/abc123")
 
 
-def test_surprise_with_empty_later_goes_to_the_later_list(client):
+def test_surprise_with_empty_shortlist_goes_to_the_shortlist(client):
     empty = {"results": [], "nextPageCursor": None, "count": 0}
     with patch.object(routes_module, "fetch_article_list", return_value=empty):
         resp = client.get("/reader/surprise")
     assert resp.status_code == 302
-    assert resp.headers["Location"].endswith("/reader/?location=later")
+    assert resp.headers["Location"].endswith("/reader/?location=shortlist")
 
 
 def test_surprise_api_error_renders_error_page(client):

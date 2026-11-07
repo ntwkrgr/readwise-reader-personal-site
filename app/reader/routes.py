@@ -67,14 +67,14 @@ def article_list():
 
 @reader_bp.route("/surprise")
 def surprise():
-    """Open a random article from the (cached) first page of Later; fall back to the Later list if it's empty."""
+    """Open a random article from the (cached) first page of Shortlist; fall back to the Shortlist list if it's empty."""
     try:
-        data = fetch_article_list(location="later")
+        data = fetch_article_list(location="shortlist")
     except ReadwiseAPIError as e:
         return render_template("error.html", message=str(e), retry_url=request.url)
     if not data["results"]:
-        flash("Nothing in Later to pick from.")
-        return redirect(url_for("reader_bp.article_list", location="later"))
+        flash("Nothing in Shortlist to pick from.")
+        return redirect(url_for("reader_bp.article_list", location="shortlist"))
     article = random.choice(data["results"])
     return redirect(url_for("reader_bp.read_article", doc_id=article["id"]))
 
