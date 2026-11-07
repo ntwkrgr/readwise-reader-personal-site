@@ -14,6 +14,7 @@ SECTION_CARDS = (
     ("card-reader", "Reader", "/reader/"),
     ("card-highlights", "Highlights", "/highlights/"),
     ("card-notebook", "Notebook", "/notebook/"),
+    ("card-surprise", "Surprise me", "/reader/surprise"),
 )
 # What fetch_weather() returns on a good day
 SAMPLE_WEATHER = {

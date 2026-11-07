@@ -116,6 +116,8 @@
     .card-highlights .dashboard-card-icon { background: #ef6c00; }
     .card-notebook { box-shadow: 5px 5px 0 #2e7d32; }
     .card-notebook .dashboard-card-icon { background: #2e7d32; }
+    .card-surprise { box-shadow: 5px 5px 0 #6a1b9a; }
+    .card-surprise .dashboard-card-icon { background: #6a1b9a; }
     /* Settings: small slate icon tile fixed to the bottom-right corner of the screen */
     .settings-corner {
         position: fixed;
@@ -213,6 +215,13 @@
             <span class="dashboard-card-text">
                 <span class="dashboard-card-title">Notebook</span>
                 <span class="dashboard-card-sub">Journal and to-dos</span>
+            </span>
+        </a>
+        <a class="dashboard-card card-surprise" href="{{ url_for('reader_bp.surprise') }}">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></span>
+            <span class="dashboard-card-text">
+                <span class="dashboard-card-title">Surprise me</span>
+                <span class="dashboard-card-sub">A random pick from Later</span>
             </span>
         </a>
     </nav>

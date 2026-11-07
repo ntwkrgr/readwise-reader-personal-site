@@ -365,3 +365,26 @@ def test_settings_post_rejects_invalid_values(client):
     assert resp.status_code == 302
     set_cookies = "\n".join(resp.headers.getlist("Set-Cookie"))
     assert "readwise_text_size=medium" in set_cookies  # Falls back to default
+
+
+def test_surprise_opens_a_random_later_article(client):
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock_list:
+        resp = client.get("/reader/surprise")
+    assert mock_list.call_args.kwargs["location"] == "later"
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/reader/read/abc123")
+
+
+def test_surprise_with_empty_later_goes_to_the_later_list(client):
+    empty = {"results": [], "nextPageCursor": None, "count": 0}
+    with patch.object(routes_module, "fetch_article_list", return_value=empty):
+        resp = client.get("/reader/surprise")
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/reader/?location=later")
+
+
+def test_surprise_api_error_renders_error_page(client):
+    with patch.object(routes_module, "fetch_article_list", side_effect=ReadwiseAPIError("API down")):
+        resp = client.get("/reader/surprise")
+    assert resp.status_code == 200
+    assert "API down" in resp.get_data(as_text=True)
