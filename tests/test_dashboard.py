@@ -71,9 +71,11 @@ def test_old_plain_link_list_is_gone(client):
     assert "dashboard-link" not in _home_html(client)
 
 
-def test_dark_theme_keeps_colored_stripes():
-    """Dark rules must recolor borders side by side; a `border-color` shorthand would also turn the colored left stripe white."""
-    assert "border-color:" not in DASHBOARD_TEMPLATE.read_text()
+def test_cards_use_colored_shadow_not_left_stripe():
+    """Card accents are a colored offset shadow; the thick colored left border is gone."""
+    css = DASHBOARD_TEMPLATE.read_text()
+    assert "border-left" not in css
+    assert "box-shadow: 5px 5px 0" in css
 
 
 def test_weather_card_shows_current_conditions(client):

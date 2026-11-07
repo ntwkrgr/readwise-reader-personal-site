@@ -124,4 +124,4 @@ The reader experience is designed for the Kindle Colorsoft's experimental web br
 - High contrast, no color-dependent controls, no animations
 - Georgia/serif font stack for comfortable reading
 - Minimal page weight to keep load times fast on e-ink
-- The Colorsoft has a Kaleido 3 color layer, but it runs at 150 ppi vs. 300 ppi for black-and-white, so text always stays black (light theme) or white (dark theme). Reading views stay fully monochrome; the home page uses bold color only as accents — card stripes, icon tiles, and weather icons.
+- The Colorsoft has a Kaleido 3 color layer, but it runs at 150 ppi vs. 300 ppi for black-and-white, so text always stays black (light theme) or white (dark theme). Reading views stay fully monochrome; the home page uses bold color only as accents — card shadows, icon tiles, and weather icons.
