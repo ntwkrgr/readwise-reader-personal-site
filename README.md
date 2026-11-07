@@ -101,7 +101,7 @@ The Refresh button has a 2-minute cooldown. Hitting it within that window shows 
 
 If a 429 is returned despite all this, the app waits and retries once before surfacing an error.
 
-Home page weather comes from [Open-Meteo](https://open-meteo.com/) (free, no API key) and is cached for 30 minutes in the same disk cache. Failed lookups aren't cached, so the next page load tries again; each attempt waits at most 5 seconds.
+Home page weather comes from [Open-Meteo](https://open-meteo.com/) (free, no API key) and is cached for 30 minutes in the same disk cache. Failed lookups aren't cached, so the next page load tries again; each attempt gives up if Open-Meteo doesn't connect or reply within 5 seconds.
 
 ## Reader Settings
 
