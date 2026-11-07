@@ -4,7 +4,7 @@ A multi-feature personal dashboard built with Flask. It keeps the original Kindl
 
 ## Features
 
-- **Dashboard home** at `/` with a color-coded card and icon for each tool.
+- **Dashboard home** at `/` with a weather card and a color-coded card and icon for each tool.
 - **Readwise Reader** at `/reader/` for browsing and reading Readwise Reader articles.
 - **Daily Review** at `/highlights/` with source titles and a link to the active Readwise review.
 - **Highlights Browser** at `/highlights/all` with paginated Readwise highlights.
@@ -62,7 +62,7 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 
 ### Dashboard Home
 
-Open `/` for the launch point into the dashboard features. Reader, Highlights, and Notebook each get a card with its own accent color and icon; Settings sits at the bottom of the screen.
+Open `/` for the launch point into the dashboard features. A weather card at the top shows the current temperature, conditions, and today's high/low for the place set by `WEATHER_LAT`, `WEATHER_LON`, and `WEATHER_LOCATION` (San Angelo, TX by default). If the weather can't be fetched, the card says "Weather unavailable" and the rest of the page works normally. Below it, Reader, Highlights, and Notebook each get a card with its own accent color and icon; Settings sits at the bottom of the screen.
 
 ### Readwise Reader
 
@@ -101,6 +101,8 @@ The Refresh button has a 2-minute cooldown. Hitting it within that window shows 
 
 If a 429 is returned despite all this, the app waits and retries once before surfacing an error.
 
+Home page weather comes from [Open-Meteo](https://open-meteo.com/) (free, no API key) and is cached for 30 minutes in the same disk cache. Failed lookups aren't cached, so the next page load tries again; each attempt waits at most 5 seconds.
+
 ## Reader Settings
 
 The **Settings** panel lets you tune the reading experience for your display and preference:
@@ -122,4 +124,4 @@ The reader experience is designed for the Kindle Colorsoft's experimental web br
 - High contrast, no color-dependent controls, no animations
 - Georgia/serif font stack for comfortable reading
 - Minimal page weight to keep load times fast on e-ink
-- The Colorsoft has a Kaleido 3 color layer, but the UI stays deliberately monochrome/high-contrast — the color layer runs at 150 ppi vs. 300 ppi for black-and-white, and color text would lose contrast
+- The Colorsoft has a Kaleido 3 color layer, but it runs at 150 ppi vs. 300 ppi for black-and-white, so text always stays black (light theme) or white (dark theme). Reading views stay fully monochrome; the home page uses bold color only as accents — card stripes, icon tiles, and weather icons.

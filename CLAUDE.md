@@ -22,7 +22,7 @@ Flask Blueprints package under `app/`. Entry point is `app.py`, a shim that call
 
 | Route | Module |
 |-------|--------|
-| `/` | `app/dashboard.py` — home page |
+| `/` | `app/dashboard.py` — home page (weather hero card data from `app/weather.py`) |
 | `/reader/` | `app/reader/` — Readwise Reader |
 | `/highlights/`, `/highlights/all` | `app/highlights/` — Daily Review, paginated list |
 | `/notebook/`, `/notebook/notes` | `app/notebook/` — journal/thing text capture, saved as `.txt` files |
@@ -53,6 +53,7 @@ uv run pytest
 - The reading view (`templates/reader/read.html`) has a single `#reader-bar` fixed to the bottom of the screen (not an in-flow `.toolbar` like other pages). `.reader-bar` uses `flex-wrap: wrap`, so on a narrow viewport (or with Save Highlight showing) it can grow to two rows. Pagination measures its live height via `getBoundingClientRect()` each time it recomputes, subtracts that from the usable page height, and writes it back into `body`'s `padding-bottom` — so a taller/wrapped bar is accounted for automatically. Don't reintroduce a `.toolbar` measurement in `collectBoxes()`; the bar's own height computation replaces it.
 - `#page-indicator` ("3 / 16") lives *inside* `#reader-bar`, nested in a `.reader-bar-end` wrapper alongside the Archive form (`templates/reader/read.html`). `.reader-bar-end` is `display: flex; margin-left: auto`, which pins that group to the right edge of whichever flex line it lands on — it's an ordinary flex item, not absolutely positioned (that overlapped the Archive button on narrow viewports), so it can't overlap article text or the other buttons, and it always sits flush against Archive even if the bar wraps to two rows. It's shown/hidden via `#article-content.highlight-mode-active ~ .reader-bar #page-indicator` in `templates/base.html`, a descendant selector that tolerates the `.reader-bar-end` nesting — keep the indicator somewhere inside `.reader-bar` if the bar markup is restructured further.
 - `collectBoxes()` in `templates/reader/_paginate.html` keeps `<pre>`/`<table>` atomic (one page-break-free box) only while the block fits within one page (`pageH`, computed per-recompute from viewport/text-size/bar-height). Past that it descends: per-line for `<pre>`, per-`<tr>` for `<table>`. This is device- and text-size-dependent — a block that fit whole on a larger screen or smaller text size may now split.
+- The home page calls Open-Meteo through `app/weather.py` (no API key; cached 30 min under `weather:<lat>:<lon>`; location from `WEATHER_LAT` / `WEATHER_LON` / `WEATHER_LOCATION`). Any failure makes `fetch_weather()` return `None` and the page shows "Weather unavailable". `tests/conftest.py` stubs `app.dashboard.fetch_weather` to `None` for every test so the suite stays offline — patch it inside a test to render a weather card.
 - No linter, formatter, or CI is configured for this project.
 
 ## Common commands

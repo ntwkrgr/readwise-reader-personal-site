@@ -4,21 +4,65 @@
 
 {% block styles %}
 <style>
-    /* Page heading */
-    .dashboard-title {
-        font-size: 28px;
-        line-height: 1.2;
-        font-weight: 700;
-        margin: 0 0 20px 0;
-        color: #000;
-    }
     /* Home page column: fills the screen so the Settings card can sit at the bottom */
     .dashboard-menu {
         display: flex;
         flex-direction: column;
-        min-height: calc(100vh - 84px);
+        min-height: calc(100vh - 24px);
         margin: 0;
     }
+    /* Weather hero card: colored icon left, big temperature right, stripe colored by condition */
+    .weather-card {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        margin: 0 0 16px 0;
+        border: 2px solid #000;
+        border-left: 10px solid #90a4ae;
+        border-radius: 12px;
+        background: #fff;
+        color: #000;
+    }
+    /* Square box for the weather icon; the SVG scales to fill it */
+    .weather-icon {
+        flex: 0 0 88px;
+        width: 88px;
+        height: 88px;
+        margin-right: 16px;
+    }
+    .weather-icon svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    /* Current temperature */
+    .weather-temp {
+        font-size: 56px;
+        line-height: 1;
+        font-weight: 700;
+    }
+    /* Condition label, e.g. "Partly cloudy" */
+    .weather-condition {
+        margin-top: 4px;
+        font-size: 22px;
+        line-height: 1.3;
+        font-weight: 700;
+    }
+    /* Today's high / low and the place name */
+    .weather-meta {
+        font-size: 16px;
+        line-height: 1.3;
+    }
+    /* Fallback text when weather can't be fetched */
+    .weather-empty {
+        font-size: 18px;
+        font-weight: 700;
+    }
+    /* Weather stripe color per condition (cloudy, fog, and unavailable keep the gray default) */
+    .wx-clear, .wx-partly, .wx-storm { border-left-color: #ffa000; }
+    .wx-night { border-left-color: #5c6bc0; }
+    .wx-rain { border-left-color: #1e88e5; }
+    .wx-snow { border-left-color: #039be5; }
     /* Section card: colored left stripe, colored icon tile, black/white text */
     .dashboard-card {
         display: flex;
@@ -76,9 +120,7 @@
         margin-bottom: 0;
     }
     /* Dark theme: flip text and background; recolor only the plain borders so colored stripes stay */
-    body.theme-dark .dashboard-title {
-        color: #fff;
-    }
+    body.theme-dark .weather-card,
     body.theme-dark .dashboard-card {
         background: #000;
         color: #fff;
@@ -89,12 +131,27 @@
 </style>
 {% endblock %}
 
-{% block nav %}
-<h1 class="dashboard-title">Home</h1>
-{% endblock %}
+{# Empty nav: the weather card is the top of the page, replacing the heading and base.html's Home button #}
+{% block nav %}{% endblock %}
 
 {% block content %}
+{% from "_weather_icons.html" import weather_icon %}
 <main class="dashboard-menu">
+    {# Weather hero card: live conditions, or a short notice when weather can't be fetched #}
+    {% if weather %}
+    <section class="weather-card wx-{{ weather.icon }}" aria-label="Weather">
+        <div class="weather-icon">{{ weather_icon(weather.icon) }}</div>
+        <div class="weather-body">
+            <div class="weather-temp">{{ weather.temp }}°</div>
+            <div class="weather-condition">{{ weather.condition }}</div>
+            <div class="weather-meta">H {{ weather.high }}° · L {{ weather.low }}° · {{ weather.location }}</div>
+        </div>
+    </section>
+    {% else %}
+    <section class="weather-card weather-card-empty" aria-label="Weather">
+        <p class="weather-empty">Weather unavailable</p>
+    </section>
+    {% endif %}
     {# Section cards: one per tool, each with its own accent color and icon #}
     <a class="dashboard-card card-reader" href="{{ url_for('reader_bp.article_list') }}">
         <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></span>
