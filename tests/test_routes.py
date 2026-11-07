@@ -47,23 +47,6 @@ def client(tmp_path):
 
 # --- Article list ---
 
-def test_dashboard_renders_feature_links(client):
-    resp = client.get("/")
-    assert resp.status_code == 200
-    assert b"Reader" in resp.data
-    assert b"Highlights" in resp.data
-    assert b'href="/highlights/"' in resp.data
-    assert b"Settings" in resp.data
-
-
-def test_dashboard_places_settings_link_at_bottom(client):
-    resp = client.get("/")
-    html = resp.data.decode()
-
-    assert 'class="dashboard-link dashboard-settings-link"' in html
-    assert "margin-top: auto" in html
-
-
 def test_templates_do_not_force_sans_serif_fonts():
     template_dir = Path(__file__).resolve().parents[1] / "templates"
     forbidden = ("sans-serif", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Arial")

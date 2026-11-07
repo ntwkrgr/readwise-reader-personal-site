@@ -4,7 +4,7 @@ A multi-feature personal dashboard built with Flask. It keeps the original Kindl
 
 ## Features
 
-- **Dashboard home** at `/` for navigating the available tools.
+- **Dashboard home** at `/` with a color-coded card and icon for each tool.
 - **Readwise Reader** at `/reader/` for browsing and reading Readwise Reader articles.
 - **Daily Review** at `/highlights/` with source titles and a link to the active Readwise review.
 - **Highlights Browser** at `/highlights/all` with paginated Readwise highlights.
@@ -62,7 +62,7 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 
 ### Dashboard Home
 
-Open `/` for a simple launch point into the dashboard features. Use it when switching between reading articles and reviewing highlights.
+Open `/` for the launch point into the dashboard features. Reader, Highlights, and Notebook each get a card with its own accent color and icon; Settings sits at the bottom of the screen.
 
 ### Readwise Reader
 
