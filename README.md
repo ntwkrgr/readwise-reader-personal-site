@@ -54,6 +54,9 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 | `NOTES_HOST_DIR` | No | `./notes` | Host folder bind-mounted to `/app/notes` in Docker, where Notebook `.txt` files are written. |
 | `NOTES_DIR` | No | `<app_dir>/notes` | In-container notes location (only relevant if not using Docker's default mount). |
 | `NOTES_TZ` | No | `America/Chicago` | Timezone used for Notebook filename timestamps. |
+| `WEATHER_LAT` | No | `31.4638` | Latitude for the home page weather card (default: San Angelo, TX). |
+| `WEATHER_LON` | No | `-100.4370` | Longitude for the home page weather card. |
+| `WEATHER_LOCATION` | No | `San Angelo` | Place name shown on the weather card. |
 
 ## Usage
 
