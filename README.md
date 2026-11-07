@@ -62,7 +62,7 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 
 ### Dashboard Home
 
-Open `/` for the launch point into the dashboard features. A weather card at the top shows the current temperature, conditions, and today's high/low for the place set by `WEATHER_LAT`, `WEATHER_LON`, and `WEATHER_LOCATION` (San Angelo, TX by default). If the weather can't be fetched, the card says "Weather unavailable" and the rest of the page works normally. Below it, Reader, Highlights, and Notebook each get a card with its own accent color and icon, followed by a highlight of the day: one quote picked from the Daily Review, kept for the whole day (one Readwise call per day) and hidden if Readwise can't be reached. Settings sits at the bottom of the screen.
+Open `/` for the launch point into the dashboard features. A weather card at the top shows the current temperature, conditions, and today's high/low for the place set by `WEATHER_LAT`, `WEATHER_LON`, and `WEATHER_LOCATION` (San Angelo, TX by default). If the weather can't be fetched, the card says "Weather unavailable" and the rest of the page works normally. Below it, Reader, Highlights, and Notebook sit in a two-column grid of cards, each with its own accent color and icon, followed by a highlight of the day: one quote picked from the Daily Review, kept for the whole day (one Readwise call per day) and hidden if Readwise can't be reached. Settings is a small icon in the bottom-right corner.
 
 ### Readwise Reader
 

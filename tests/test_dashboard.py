@@ -14,7 +14,6 @@ SECTION_CARDS = (
     ("card-reader", "Reader", "/reader/"),
     ("card-highlights", "Highlights", "/highlights/"),
     ("card-notebook", "Notebook", "/notebook/"),
-    ("card-settings", "Settings", "/settings"),
 )
 # What fetch_weather() returns on a good day
 SAMPLE_WEATHER = {
@@ -61,10 +60,13 @@ def test_each_section_card_has_accent_icon_and_label(client):
     assert html.count('<span class="dashboard-card-icon"><svg') == len(SECTION_CARDS)
 
 
-def test_settings_card_is_pinned_to_the_bottom(client):
+def test_section_cards_sit_in_a_two_column_grid(client):
     html = _home_html(client)
-    assert 'class="dashboard-card card-settings dashboard-settings-link"' in html
-    assert "margin-top: auto" in html
+    grid_start = html.index('<nav class="dashboard-grid"')
+    grid_end = html.index("</nav>", grid_start)
+    for card_class, _, _ in SECTION_CARDS:
+        assert grid_start < html.index(f'class="dashboard-card {card_class}"') < grid_end
+    assert "grid-template-columns: 1fr 1fr" in html
 
 
 def test_old_plain_link_list_is_gone(client):
@@ -123,9 +125,16 @@ def test_highlight_card_shows_text_and_source_and_links_to_review(client):
     assert 'href="/highlights/"' in html
 
 
-def test_highlight_card_sits_between_notebook_and_settings(client):
+def test_highlight_card_sits_below_the_card_grid(client):
     html = _home_with_highlight(client, {"text": "Quote", "title": None, "author": None})
-    assert html.index("dashboard-card card-notebook") < html.index('class="highlight-card"') < html.index("dashboard-card card-settings")
+    assert html.index("dashboard-card card-notebook") < html.index('class="highlight-card"')
+
+
+def test_settings_is_a_small_corner_icon(client):
+    html = _home_html(client)
+    assert '<a class="settings-corner" href="/settings" aria-label="Settings"' in html
+    assert "card-settings" not in html
+    assert "position: fixed" in html
 
 
 def test_no_highlight_card_when_unavailable(client):
