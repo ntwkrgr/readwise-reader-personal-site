@@ -29,6 +29,11 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     if test_config:
         app.config.update(test_config)
 
+    # Templates pipe Readwise titles/authors/text through this so pre-escaped text isn't escaped twice
+    from app.shared import decode_entities
+
+    app.jinja_env.filters["decode_entities"] = decode_entities
+
     from app.dashboard import dashboard_bp
     from app.highlights import highlights_bp
     from app.notebook import notebook_bp

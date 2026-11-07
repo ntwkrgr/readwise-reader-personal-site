@@ -86,7 +86,7 @@ def test_weather_card_shows_current_conditions(client):
     assert 'class="weather-card wx-partly"' in html
     assert '<div class="weather-temp">72°</div>' in html
     assert "Partly cloudy" in html
-    assert "H 78° · L 55° · San Angelo" in html
+    assert "↑78° · ↓55° · San Angelo" in html
 
 
 def test_weather_card_comes_first_with_no_heading_above_it(client):
@@ -124,6 +124,13 @@ def test_highlight_card_shows_text_and_source_and_links_to_review(client):
     assert "A fine sentence." in html
     assert "Good Book" in html and "Jane Doe" in html
     assert 'href="/highlights/"' in html
+
+
+def test_highlight_card_decodes_readwise_html_entities(client):
+    highlight = {"text": "Tom &amp; Jerry", "title": "Let&#39;s Dance", "author": "Black &Amp; Decker"}
+    html = _home_with_highlight(client, highlight)
+    assert "Let&#39;s Dance" in html and "Black &amp; Decker" in html and "Tom &amp; Jerry" in html
+    assert "&amp;#39;" not in html and "&amp;Amp;" not in html and "&amp;amp;" not in html
 
 
 def test_highlight_card_sits_below_the_card_grid(client):

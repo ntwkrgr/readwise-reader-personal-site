@@ -186,7 +186,7 @@
         <div class="weather-body">
             <div class="weather-temp">{{ weather.temp }}°</div>
             <div class="weather-condition">{{ weather.condition }}</div>
-            <div class="weather-meta">H {{ weather.high }}° · L {{ weather.low }}° · {{ weather.location }}</div>
+            <div class="weather-meta">↑{{ weather.high }}° · ↓{{ weather.low }}° · {{ weather.location }}</div>
         </div>
     </section>
     {% else %}
@@ -228,9 +228,9 @@
     {# Highlight of the day: one Daily Review quote, hidden when Readwise can't be reached #}
     {% if highlight and highlight.text %}
     <a class="highlight-card" href="{{ url_for('highlights_bp.daily_review') }}">
-        <span class="highlight-card-text">“{{ highlight.text | truncate(280) }}”</span>
+        <span class="highlight-card-text">“{{ highlight.text | decode_entities | truncate(280) }}”</span>
         {% if highlight.title %}
-        <span class="highlight-card-source">{{ highlight.title }}{% if highlight.author %} · {{ highlight.author }}{% endif %}</span>
+        <span class="highlight-card-source">{{ highlight.title | decode_entities }}{% if highlight.author %} · {{ highlight.author | decode_entities }}{% endif %}</span>
         {% endif %}
     </a>
     {% endif %}

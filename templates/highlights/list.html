@@ -90,14 +90,14 @@
         {% for book_id in grouped_book_ids %}
             {% set book = books.get(book_id, {}) %}
             <section class="highlight-source">
-                <h2 class="highlight-title">{{ book.get("title") or "Unknown Source" }}</h2>
+                <h2 class="highlight-title">{{ (book.get("title") or "Unknown Source") | decode_entities }}</h2>
                 {% if book.get("author") %}
-                <div class="highlight-author">{{ book.get("author") }}</div>
+                <div class="highlight-author">{{ book.get("author") | decode_entities }}</div>
                 {% endif %}
             </section>
             {% for highlight in highlights if highlight.book_id == book_id %}
             <article class="highlight-card">
-                <p class="highlight-text">{{ highlight.text }}</p>
+                <p class="highlight-text">{{ highlight.text | decode_entities }}</p>
                 {% if highlight.note %}
                 <div class="highlight-note">{{ highlight.note }}</div>
                 {% endif %}

@@ -190,3 +190,33 @@ def test_highlight_of_the_day_is_none_when_review_is_empty(client):
 def test_highlight_of_the_day_is_none_on_api_error(client):
     with patch.object(highlights_api, "api_get", side_effect=ReadwiseAPIError("API down")):
         assert highlights_api.fetch_highlight_of_the_day() is None
+
+
+# Book titles Readwise imports sometimes arrive HTML-escaped, even with title-cased entity names
+ENCODED_BOOK = {**SAMPLE_BOOK, "title": "Let&#39;s Dance", "author": "Black &Amp; Decker"}
+
+
+def test_decode_entities_handles_readwise_encoded_text():
+    from app.shared import decode_entities
+
+    assert decode_entities("Let&#39;s Dance") == "Let's Dance"
+    assert decode_entities("Black &Amp; Decker") == "Black & Decker"
+    assert decode_entities("Fish &amp; Chips &quot;now&quot;") == 'Fish & Chips "now"'
+    assert decode_entities("Plain & simple, it's fine") == "Plain & simple, it's fine"
+    assert decode_entities(None) is None
+
+
+def test_highlights_list_decodes_encoded_book_titles(client):
+    with patch.object(highlights_routes, "fetch_highlights", return_value=SAMPLE_HIGHLIGHTS_DATA):
+        with patch.object(highlights_routes, "fetch_books", return_value={"results": [ENCODED_BOOK]}):
+            html = client.get("/highlights/all").get_data(as_text=True)
+    assert "Let&#39;s Dance" in html and "Black &amp; Decker" in html
+    assert "&amp;#39;" not in html and "&amp;Amp;" not in html
+
+
+def test_daily_review_decodes_encoded_source_titles(client):
+    with patch.object(highlights_routes, "fetch_daily_review", return_value=SAMPLE_REVIEW_DATA):
+        with patch.object(highlights_routes, "fetch_books", return_value={"results": [ENCODED_BOOK]}):
+            html = client.get("/highlights/").get_data(as_text=True)
+    assert "Let&#39;s Dance" in html and "Black &amp; Decker" in html
+    assert "&amp;#39;" not in html and "&amp;Amp;" not in html
