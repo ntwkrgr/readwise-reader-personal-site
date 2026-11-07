@@ -105,3 +105,27 @@ def test_every_weather_icon_has_an_svg():
         names = {icon for _, icon in weather.WMO_CODES.values()} | {"night"}
         for name in sorted(names):
             assert "<svg" in str(weather_icon(name)), f"no SVG for weather icon {name!r}"
+
+
+def _home_with_highlight(client, highlight):
+    """GET the home page with fetch_highlight_of_the_day() stubbed to return highlight."""
+    with patch.object(dashboard_module, "fetch_highlight_of_the_day", return_value=highlight):
+        return _home_html(client)
+
+
+def test_highlight_card_shows_text_and_source_and_links_to_review(client):
+    html = _home_with_highlight(client, {"text": "A fine sentence.", "title": "Good Book", "author": "Jane Doe"})
+    assert 'class="highlight-card"' in html
+    assert "A fine sentence." in html
+    assert "Good Book" in html and "Jane Doe" in html
+    assert 'href="/highlights/"' in html
+
+
+def test_highlight_card_sits_between_notebook_and_settings(client):
+    html = _home_with_highlight(client, {"text": "Quote", "title": None, "author": None})
+    assert html.index("dashboard-card card-notebook") < html.index('class="highlight-card"') < html.index("dashboard-card card-settings")
+
+
+def test_no_highlight_card_when_unavailable(client):
+    html = _home_with_highlight(client, None)
+    assert 'class="highlight-card"' not in html
