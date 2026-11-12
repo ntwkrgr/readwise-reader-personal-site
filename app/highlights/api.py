@@ -1,7 +1,9 @@
+import random
+from datetime import date
 from typing import Any
 
 from app.cache import cached_fetch
-from app.shared import api_get
+from app.shared import ReadwiseAPIError, api_get
 
 HIGHLIGHTS_CACHE_TTL = 1200  # 20 minutes
 
@@ -51,3 +53,24 @@ def fetch_books() -> dict[str, Any]:
 def fetch_daily_review() -> dict[str, Any]:
     # Daily review is not cached because it changes daily and is lightweight.
     return api_get(f"{READWISE_V2_BASE}/review/")
+
+
+def fetch_highlight_of_the_day() -> dict[str, Any] | None:
+    """Return one random Daily Review highlight (text, title, author) for the home page, or None.
+
+    The pick is cached per calendar day so the home page shows the same highlight all day
+    and makes at most one Readwise call per day. Errors and empty reviews return None.
+    """
+
+    def pick() -> dict[str, Any] | None:
+        # Choose one highlight from today's review and keep only the fields the card shows
+        highlights = fetch_daily_review().get("highlights") or []
+        if not highlights:
+            return None
+        chosen = random.choice(highlights)
+        return {"text": chosen.get("text"), "title": chosen.get("title"), "author": chosen.get("author")}
+
+    try:
+        return cached_fetch(f"highlights:home:{date.today().isoformat()}", pick, 86400)
+    except ReadwiseAPIError:  # Readwise down or rate-limited: just hide the card
+        return None

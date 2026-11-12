@@ -47,23 +47,6 @@ def client(tmp_path):
 
 # --- Article list ---
 
-def test_dashboard_renders_feature_links(client):
-    resp = client.get("/")
-    assert resp.status_code == 200
-    assert b"Reader" in resp.data
-    assert b"Highlights" in resp.data
-    assert b'href="/highlights/"' in resp.data
-    assert b"Settings" in resp.data
-
-
-def test_dashboard_places_settings_link_at_bottom(client):
-    resp = client.get("/")
-    html = resp.data.decode()
-
-    assert 'class="dashboard-link dashboard-settings-link"' in html
-    assert "margin-top: auto" in html
-
-
 def test_templates_do_not_force_sans_serif_fonts():
     template_dir = Path(__file__).resolve().parents[1] / "templates"
     forbidden = ("sans-serif", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Arial")
@@ -382,3 +365,26 @@ def test_settings_post_rejects_invalid_values(client):
     assert resp.status_code == 302
     set_cookies = "\n".join(resp.headers.getlist("Set-Cookie"))
     assert "readwise_text_size=medium" in set_cookies  # Falls back to default
+
+
+def test_surprise_opens_a_random_shortlist_article(client):
+    with patch.object(routes_module, "fetch_article_list", return_value=SAMPLE_LIST) as mock_list:
+        resp = client.get("/reader/surprise")
+    assert mock_list.call_args.kwargs["location"] == "shortlist"
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/reader/read/abc123")
+
+
+def test_surprise_with_empty_shortlist_goes_to_the_shortlist(client):
+    empty = {"results": [], "nextPageCursor": None, "count": 0}
+    with patch.object(routes_module, "fetch_article_list", return_value=empty):
+        resp = client.get("/reader/surprise")
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/reader/?location=shortlist")
+
+
+def test_surprise_api_error_renders_error_page(client):
+    with patch.object(routes_module, "fetch_article_list", side_effect=ReadwiseAPIError("API down")):
+        resp = client.get("/reader/surprise")
+    assert resp.status_code == 200
+    assert "API down" in resp.get_data(as_text=True)

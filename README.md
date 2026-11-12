@@ -4,7 +4,7 @@ A multi-feature personal dashboard built with Flask. It keeps the original Kindl
 
 ## Features
 
-- **Dashboard home** at `/` for navigating the available tools.
+- **Dashboard home** at `/` with a weather card and a color-coded card and icon for each tool.
 - **Readwise Reader** at `/reader/` for browsing and reading Readwise Reader articles.
 - **Daily Review** at `/highlights/` with source titles and a link to the active Readwise review.
 - **Highlights Browser** at `/highlights/all` with paginated Readwise highlights.
@@ -54,12 +54,15 @@ The container automatically restarts on crash. To survive reboots, enable **"Sta
 | `NOTES_HOST_DIR` | No | `./notes` | Host folder bind-mounted to `/app/notes` in Docker, where Notebook `.txt` files are written. |
 | `NOTES_DIR` | No | `<app_dir>/notes` | In-container notes location (only relevant if not using Docker's default mount). |
 | `NOTES_TZ` | No | `America/Chicago` | Timezone used for Notebook filename timestamps. |
+| `WEATHER_LAT` | No | `31.4638` | Latitude for the home page weather card (default: San Angelo, TX). |
+| `WEATHER_LON` | No | `-100.4370` | Longitude for the home page weather card. |
+| `WEATHER_LOCATION` | No | `San Angelo` | Place name shown on the weather card. |
 
 ## Usage
 
 ### Dashboard Home
 
-Open `/` for a simple launch point into the dashboard features. Use it when switching between reading articles and reviewing highlights.
+Open `/` for the launch point into the dashboard features. A weather card at the top shows the current temperature, conditions, and today's high/low for the place set by `WEATHER_LAT`, `WEATHER_LON`, and `WEATHER_LOCATION` (San Angelo, TX by default). If the weather can't be fetched, the card says "Weather unavailable" and the rest of the page works normally. Below it, Reader, Highlights, Notebook, and Surprise me (opens a random article from the first page of Shortlist) sit in a two-column grid of cards, each with its own accent color and icon, followed by a highlight of the day: one quote picked from the Daily Review, kept for the whole day (one Readwise call per day) and hidden if Readwise can't be reached. Settings is a small icon in the bottom-right corner.
 
 ### Readwise Reader
 
@@ -98,6 +101,8 @@ The Refresh button has a 2-minute cooldown. Hitting it within that window shows 
 
 If a 429 is returned despite all this, the app waits and retries once before surfacing an error.
 
+Home page weather comes from [Open-Meteo](https://open-meteo.com/) (free, no API key) and is cached for 30 minutes in the same disk cache. Failed lookups aren't cached, so the next page load tries again; each attempt gives up if Open-Meteo doesn't connect or reply within 5 seconds.
+
 ## Reader Settings
 
 The **Settings** panel lets you tune the reading experience for your display and preference:
@@ -119,4 +124,4 @@ The reader experience is designed for the Kindle Colorsoft's experimental web br
 - High contrast, no color-dependent controls, no animations
 - Georgia/serif font stack for comfortable reading
 - Minimal page weight to keep load times fast on e-ink
-- The Colorsoft has a Kaleido 3 color layer, but the UI stays deliberately monochrome/high-contrast — the color layer runs at 150 ppi vs. 300 ppi for black-and-white, and color text would lose contrast
+- The Colorsoft has a Kaleido 3 color layer, but it runs at 150 ppi vs. 300 ppi for black-and-white, so text always stays black (light theme) or white (dark theme). Reading views stay fully monochrome; the home page uses bold color only as accents — card shadows, icon tiles, and weather icons.

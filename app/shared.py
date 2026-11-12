@@ -1,6 +1,9 @@
+import html
 import os
+import re
 import time
 
+from html.entities import html5
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -9,6 +12,22 @@ import requests as http_requests
 
 READWISE_TOKEN = os.environ.get("READWISE_TOKEN", "")
 READWISE_API_BASE = "https://readwise.io/api/v3"
+
+# A named HTML entity such as "&amp;", or Readwise's title-cased "&Amp;"
+_NAMED_ENTITY = re.compile(r"&([A-Za-z]+);")
+
+
+def decode_entities(value: str | None) -> str | None:
+    """Decode HTML entities Readwise leaves in plain-text fields ("Let&#39;s" -> "Let's").
+
+    Readwise title-cases some imported book titles, turning "&amp;" into "&Amp;", so entity
+    names Python doesn't recognize as written are lower-cased before decoding.
+    """
+    if not value:
+        return value
+    # Lower-case unrecognized entity names (&Amp; -> &amp;); case-sensitive ones like &Eacute; stay
+    value = _NAMED_ENTITY.sub(lambda m: m.group(0) if m.group(1) + ";" in html5 else m.group(0).lower(), value)
+    return html.unescape(value)
 
 
 class ReadwiseAPIError(Exception):

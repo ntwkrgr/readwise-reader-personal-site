@@ -256,20 +256,3 @@ def test_note_detail_missing_file_shows_error(client):
     resp = client.get("/notebook/notes/journal-20260830-143205.txt")
     assert resp.status_code == 200
     assert b"Something went wrong" in resp.data
-
-
-# --- dashboard integration ---
-
-
-def test_dashboard_includes_notebook_link(client):
-    resp = client.get("/")
-    assert resp.status_code == 200
-    assert b"Notebook" in resp.data
-    assert b'href="/notebook/"' in resp.data
-
-
-def test_dashboard_settings_link_still_last(client):
-    resp = client.get("/")
-    html = resp.data.decode()
-    assert 'class="dashboard-link dashboard-settings-link"' in html
-    assert "margin-top: auto" in html

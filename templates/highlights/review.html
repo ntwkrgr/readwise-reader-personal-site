@@ -95,13 +95,13 @@
             {% set source_author = highlight.author or (book.get("author") if book else None) %}
             {% if source_title %}
             <div class="review-source">
-                {{ source_title }}
+                {{ source_title | decode_entities }}
                 {% if source_author %}
-                <span class="review-author">· {{ source_author }}</span>
+                <span class="review-author">· {{ source_author | decode_entities }}</span>
                 {% endif %}
             </div>
             {% endif %}
-            <p class="review-text">{{ highlight.text }}</p>
+            <p class="review-text">{{ highlight.text | decode_entities }}</p>
             {% if highlight.note %}
             <div class="review-note">{{ highlight.note }}</div>
             {% endif %}
